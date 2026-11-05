@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carrier Parts Tracking - ระบบติดตามสถานะขนส่งอะไหล่</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: 'Prompt', sans-serif; }
+    .carrier-blue { color: #0F2B74; }
+    .bg-carrier-blue { background-color: #0F2B74; }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+
+  <!-- Navbar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <!-- โลโก้ Carrier ตามภาพต้นฉบับ -->
+        <div class="bg-white p-1 rounded border border-slate-100 flex items-center justify-center">
+          <svg class="h-8 w-auto" viewBox="0 0 420 190" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="210" cy="95" rx="205" ry="90" fill="#0F2B74" stroke="#0F2B74" stroke-width="4"/>
+            <ellipse cx="210" cy="95" rx="192" ry="78" fill="#0F2B74" stroke="#FFFFFF" stroke-width="6"/>
+            <text x="50%" y="54%" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-family="'Brush Script MT', 'Times New Roman', cursive, serif" font-style="italic" font-weight="bold" font-size="94">Carrier</text>
+          </svg>
+        </div>
+        <div class="h-6 w-px bg-slate-300"></div>
+        <span class="font-bold text-slate-800 text-base md:text-lg">Carrier Parts Tracking</span>
+      </div>
+      <div id="syncStatus" class="flex items-center space-x-2 text-xs text-slate-500">
+        <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+        <span>กำลังเตรียมข้อมูลชีต...</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+      <h1 class="text-2xl md:text-3xl font-bold text-slate-900 mb-2">ตรวจสอบและติดตามสถานะขนส่งอะไหล่</h1>
+      <p class="text-slate-500 text-sm">ค้นหาด้วยเลขที่ Sales Order (SO.), หมายเลขพัสดุ (EMS) หรือชื่อร้านผู้รับ</p>
+    </div>
+
+    <!-- Search Box -->
+    <div class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200 mb-6">
+      <div class="flex flex-col md:flex-row gap-3">
+        <div class="relative flex-1">
+          <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="searchInput" placeholder="เช่น SO-BCT-260000071, ED794967911TH หรือ บริษัทมหานคร แอร์คอน" 
+                 class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white text-sm">
+        </div>
+        <button onclick="searchData()" class="bg-carrier-blue hover:opacity-95 text-white font-medium px-6 py-3 rounded-xl transition flex items-center justify-center space-x-2">
+          <span>ค้นหา</span>
+          <i class="fa-solid fa-arrow-right text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Quick Test Tags จาก Google Sheet จริง -->
+      <div class="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+        <span class="font-medium">ตัวอย่างข้อมูลจริง:</span>
+        <button onclick="quickTest('SO-BCT-260000071')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700">SO-BCT-260000071</button>
+        <button onclick="quickTest('ED794967911TH')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700">ED794967911TH</button>
+        <button onclick="quickTest('บริษัทมหานคร แอร์คอน')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700">บริษัทมหานคร แอร์คอน</button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loadingBox" class="hidden text-center py-10">
+      <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-600 mb-3"></i>
+      <p class="text-slate-500 text-sm">กำลังค้นหาข้อมูลพัสดุจาก Google Sheets...</p>
+    </div>
+
+    <!-- Not Found -->
+    <div id="notFoundBox" class="hidden bg-rose-50 border border-rose-200 text-rose-700 p-5 rounded-2xl text-center mb-6">
+      <i class="fa-solid fa-circle-exclamation text-2xl mb-1"></i>
+      <div class="font-medium">ไม่พบข้อมูลตามคำค้นหาที่ระบุ</div>
+      <p class="text-xs text-rose-500 mt-1">โปรดตรวจสอบเลขที่ SO. หรือหมายเลขพัสดุอีกครั้ง</p>
+    </div>
+
+    <!-- Result Box -->
+    <div id="resultBox" class="hidden space-y-5">
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <div class="text-xs text-slate-400">หมายเลขพัสดุ (Tracking No.)</div>
+            <div id="resTracking" class="text-xl font-bold text-slate-800 font-mono"></div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 flex items-center space-x-1">
+              <i class="fa-solid fa-box-check"></i>
+              <span>จัดส่งผ่าน EMS</span>
+            </span>
+            <a id="thailandPostLink" href="#" target="_blank" class="px-3 py-1 rounded-full text-xs font-semibold bg-red-600 text-white hover:bg-red-700 transition">
+              เช็กเว็บไปรษณีย์ไทย <i class="fa-solid fa-up-right-from-square text-[10px]"></i>
+            </a>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 text-xs md:text-sm">
+          <div>
+            <div class="text-slate-400">เลขที่ SO.</div>
+            <div id="resSO" class="font-semibold text-slate-800"></div>
+          </div>
+          <div>
+            <div class="text-slate-400">วันที่จัดส่ง</div>
+            <div id="resDate" class="font-semibold text-slate-800"></div>
+          </div>
+          <div>
+            <div class="text-slate-400">ผู้รับ (SHIP TO)</div>
+            <div id="resShipTo" class="font-semibold text-slate-800"></div>
+          </div>
+          <div>
+            <div class="text-slate-400">จังหวัดปลายทาง</div>
+            <div id="resProvince" class="font-semibold text-slate-800"></div>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+          <div>ศูนย์กระจายสินค้า: <span id="resCustomer" class="text-slate-600 font-medium"></span></div>
+          <div>อะไหล่แท้ Carrier (Thailand)</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const SHEET_ID = '1gqy5OnPiPwOVKrQgRDBSSQ8EkdCmqfCQmdH_m-ssQOY';
+    let sheetRecords = [];
+
+    // ดึงข้อมูลตรงจาก Google Sheet อัตโนมัติเมื่อโหลดหน้าเว็บ
+    async function fetchSheetData() {
+      const gvizUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&tq=select%20*`;
+      try {
+        const response = await fetch(gvizUrl);
+        const text = await response.text();
+        // แปลง JSONP ของ Google Visualization
+        const json = JSON.parse(text.substring(47).slice(0, -2));
+        const rows = json.table.rows;
+
+        sheetRecords = rows.map(r => ({
+          date: r.c[0] ? r.c[0].f || r.c[0].v : '',
+          so: r.c[1] ? r.c[1].v : '',
+          customer: r.c[2] ? r.c[2].v : '',
+          shipTo: r.c[3] ? r.c[3].v : '',
+          province: r.c[4] ? r.c[4].v : '',
+          carrier: r.c[5] ? r.c[5].v : '',
+          tracking: r.c[6] ? r.c[6].v : ''
+        }));
+
+        document.getElementById('syncStatus').innerHTML = `
+          <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+          <span>ซิงค์ชีตสำเร็จ (${sheetRecords.length} รายการ)</span>
+        `;
+      } catch (err) {
+        console.error("Sheet fetch error:", err);
+        document.getElementById('syncStatus').innerHTML = `
+          <span class="inline-block w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+          <span>เชื่อมต่อชีตขัดข้อง</span>
+        `;
+      }
+    }
+
+    function quickTest(val) {
+      document.getElementById('searchInput').value = val;
+      searchData();
+    }
+
+    function searchData() {
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      if (!q) return;
+
+      const notFoundBox = document.getElementById('notFoundBox');
+      const resultBox = document.getElementById('resultBox');
+
+      const match = sheetRecords.find(item => 
+        (item.so && item.so.toString().toLowerCase().includes(q)) ||
+        (item.tracking && item.tracking.toString().toLowerCase().includes(q)) ||
+        (item.shipTo && item.shipTo.toString().toLowerCase().includes(q))
+      );
+
+      if (match) {
+        notFoundBox.classList.add('hidden');
+        document.getElementById('resTracking').innerText = match.tracking || '-';
+        document.getElementById('resSO').innerText = match.so || '-';
+        document.getElementById('resDate').innerText = match.date || '-';
+        document.getElementById('resShipTo').innerText = match.shipTo || '-';
+        document.getElementById('resProvince').innerText = match.province || '-';
+        document.getElementById('resCustomer').innerText = match.customer || '-';
+        
+        // ลิงก์ตรงสำหรับติดตามเลขพัสดุในเว็บไปรษณีย์ไทย
+        document.getElementById('thailandPostLink').href = `https://track.thailandpost.co.th/?trackNumber=${match.tracking}`;
+
+        resultBox.classList.remove('hidden');
+      } else {
+        resultBox.classList.add('hidden');
+        notFoundBox.classList.remove('hidden');
+      }
+    }
+
+    // เริ่มดึงข้อมูลทันทีเมื่อเปิดหน้าเว็บ
+    window.addEventListener('DOMContentLoaded', fetchSheetData);
+  </script>
+</body>
+</html>
