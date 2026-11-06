@@ -21,312 +21,372 @@
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col justify-between">
 
-  <!-- Navbar -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
-    <div class="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between">
-      <div class="flex items-center space-x-3 cursor-pointer" onclick="resetToHome()">
-        <!-- ตราสัญลักษณ์ Carrier วงรีตามแบบภาพต้นฉบับล่าสุด -->
-        <div class="bg-white px-2 py-1 rounded-xl border border-slate-200 flex items-center justify-center shadow-xs">
-          <img src="carrier-logo.png" alt="Carrier Logo" class="h-9 w-auto object-contain hidden" onload="this.classList.remove('hidden'); document.getElementById('svgLogoNav').style.display='none';">
-          <svg id="svgLogoNav" class="h-9 w-auto" viewBox="0 0 520 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- ================= 1. หน้าต่างล็อกอิน (Gatekeeper Login Modal) ================= -->
+  <div id="loginScreen" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-100 p-8 text-center transition-all">
+      
+      <!-- Carrier Logo Oval กลางหน้าต่าง Login -->
+      <div class="mb-5 flex justify-center">
+        <div class="bg-white px-3 py-1.5 rounded-2xl border border-slate-200 shadow-sm inline-flex items-center justify-center">
+          <img src="carrier-logo.png" alt="Carrier Logo" class="h-10 w-auto object-contain hidden" onload="this.classList.remove('hidden'); document.getElementById('svgLoginLogo').style.display='none';">
+          <svg id="svgLoginLogo" class="h-10 w-auto" viewBox="0 0 520 240" fill="none" xmlns="http://www.w3.org/2000/svg">
             <ellipse cx="260" cy="120" rx="245" ry="102" fill="#041E70" stroke="#041E70" stroke-width="4"/>
             <ellipse cx="260" cy="120" rx="234" ry="91" fill="none" stroke="#FFFFFF" stroke-width="6.5"/>
             <text x="260" y="125" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" class="carrier-script" font-size="124" letter-spacing="-1">Carrier</text>
           </svg>
         </div>
+      </div>
 
-        <div class="h-8 w-px bg-slate-200"></div>
+      <h2 class="text-xl font-bold text-slate-900 tracking-tight">เข้าสู่ระบบติดตามสถานะอะไหล่</h2>
+      <p class="text-xs text-slate-500 mt-1 mb-6">B.GRIMM Carrier (Thailand) Limited</p>
+
+      <!-- แจ้งเตือนเมื่อรหัสผ่านผิด -->
+      <div id="loginError" class="hidden mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center space-x-2 text-left">
+        <i class="fa-solid fa-circle-exclamation text-rose-500 text-sm"></i>
+        <span>ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง</span>
+      </div>
+
+      <!-- แบบฟอร์มกรอกชื่อผู้ใช้และรหัสผ่าน -->
+      <form onsubmit="handleLogin(event)" class="space-y-4 text-left">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1.5">ชื่อผู้ใช้ (Username)</label>
+          <div class="relative">
+            <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input type="text" id="usernameInput" required placeholder="เช่น carrier" autofocus
+                   class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white text-sm transition">
+          </div>
+        </div>
 
         <div>
-          <div class="flex items-center space-x-2">
-            <span class="font-bold text-slate-900 text-sm md:text-base leading-tight">Carrier Parts Tracking</span>
-            <span class="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-900 border border-blue-200">ระบบติดตามอะไหล่</span>
+          <label class="block text-xs font-semibold text-slate-700 mb-1.5">รหัสผ่าน (Password)</label>
+          <div class="relative">
+            <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input type="password" id="passwordInput" required placeholder="ระบุรหัสผ่าน 6 หลัก"
+                   class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white text-sm transition">
           </div>
-          <span class="text-[11px] text-slate-500 font-medium">B.GRIMM Carrier (Thailand) Limited</span>
         </div>
-      </div>
 
-      <div class="flex items-center space-x-2 sm:space-x-3">
-        <div id="syncBadge" class="flex items-center space-x-2 text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-full">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span id="syncText">ฐานข้อมูลพร้อมใช้งาน</span>
-        </div>
-        <a href="tel:1454" class="hidden md:flex items-center space-x-1.5 px-3.5 py-2 bg-carrier text-white rounded-xl text-xs font-semibold hover:opacity-90 transition shadow-xs">
-          <i class="fa-solid fa-phone"></i>
-          <span>Carrier Care 1454</span>
-        </a>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Container -->
-  <main class="max-w-4xl mx-auto px-4 py-10 flex-1 w-full space-y-8">
-
-    <!-- Hero ส่วนหัวหน้าค้นหาหลัก -->
-    <div id="heroSection" class="text-center">
-      <div class="inline-flex items-center space-x-2 px-3 py-1 bg-blue-50 text-blue-900 rounded-full text-xs font-semibold mb-3 border border-blue-100">
-        <i class="fa-solid fa-snowflake text-carrier"></i>
-        <span>ระบบตรวจสอบสถานะการขนส่งอะไหล่เครื่องปรับอากาศแคเรียร์</span>
-      </div>
-      <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-2">ติดตามสถานะจัดส่งอะไหล่ แคเรียร์</h1>
-      <p class="text-slate-500 text-sm md:text-base max-w-xl mx-auto">
-        ระบุเลขที่ Sales Order (SO.), หมายเลขพัสดุ EMS หรือชื่อร้านตัวแทนจำหน่าย เพื่อตรวจสอบสถานะได้ทันที
-      </p>
-    </div>
-
-    <!-- กล่องค้นหาข้อมูล (Search Box เด่นชัดกลางหน้าจอ) -->
-    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8">
-      <div class="flex flex-col md:flex-row gap-3">
-        <div class="relative flex-1">
-          <i class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
-          <input type="text" id="searchInput" autofocus onkeyup="if(event.key==='Enter') executeSearch()"
-                 placeholder="พิมพ์เลข SO (เช่น SO-BCT-260000071), เลข EMS หรือชื่อร้าน..." 
-                 class="w-full pl-14 pr-4 py-4 bg-slate-50 border border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white text-base transition">
-        </div>
-        <button onclick="executeSearch()" class="bg-carrier hover:opacity-95 text-white font-semibold px-8 py-4 rounded-2xl transition flex items-center justify-center space-x-2 text-base shadow-sm active:scale-95">
-          <span>ค้นหาข้อมูล</span>
-          <i class="fa-solid fa-arrow-right text-sm"></i>
+        <button type="submit" class="w-full mt-2 bg-carrier hover:opacity-95 text-white font-semibold py-3.5 rounded-xl transition text-sm shadow-md flex items-center justify-center space-x-2 active:scale-95">
+          <span>เข้าสู่ระบบ</span>
+          <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
         </button>
-      </div>
+      </form>
 
-      <!-- Quick Chips ตัวอย่างข้อมูลจริง -->
-      <div class="mt-5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-        <span class="font-medium text-slate-400"><i class="fa-solid fa-bolt text-amber-500 mr-1"></i>คลิกดูตัวอย่างทันที:</span>
-        <button onclick="quickSelect('SO-BCT-260000071')" class="px-3 py-1.5 bg-blue-50 text-blue-900 hover:bg-blue-100 rounded-xl border border-blue-200 font-mono font-medium transition">SO-BCT-260000071</button>
-        <button onclick="quickSelect('ED794967911TH')" class="px-3 py-1.5 bg-red-50 text-red-900 hover:bg-red-100 rounded-xl border border-red-200 font-mono font-medium transition">ED794967911TH</button>
-        <button onclick="quickSelect('บริษัทมหานคร แอร์คอน')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition">บริษัทมหานคร แอร์คอน</button>
-        <button onclick="quickSelect('ED794967664TH')" class="px-3 py-1.5 bg-amber-50 text-amber-900 hover:bg-amber-100 rounded-xl border border-amber-200 font-mono font-medium transition">ED794967664TH</button>
-        <button id="btnClear" onclick="resetToHome()" class="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl transition hidden ml-auto font-medium">
-          <i class="fa-solid fa-rotate-left mr-1"></i>ล้างการค้นหา
-        </button>
+      <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+        <span>Carrier Care โทร. 1454</span>
+        <span class="text-blue-900 font-medium">B.GRIMM Care Support</span>
       </div>
     </div>
+  </div>
 
-    <!-- หน้าเริ่มต้นก่อนค้นหา: การ์ดแนะนำประเภทการค้นหา (จะซ่อนเมื่อค้นหา) -->
-    <div id="initialGuidance" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center py-4">
-      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs hover:border-blue-300 transition">
-        <div class="w-12 h-12 mx-auto mb-3 bg-blue-50 text-carrier rounded-2xl flex items-center justify-center text-xl">
-          <i class="fa-solid fa-file-invoice"></i>
-        </div>
-        <div class="font-bold text-slate-800 text-sm mb-1">ค้นหาด้วยเลขที่ Sales Order</div>
-        <div class="text-xs text-slate-400">ระบุเลข SO เช่น SO-BCT-260000071 เพื่อดูสถานะพัสดุทุกรายการในออเดอร์</div>
-      </div>
-
-      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs hover:border-emerald-300 transition">
-        <div class="w-12 h-12 mx-auto mb-3 bg-emerald-50 text-emerald-700 rounded-2xl flex items-center justify-center text-xl">
-          <i class="fa-solid fa-box-open"></i>
-        </div>
-        <div class="font-bold text-slate-800 text-sm mb-1">ค้นหาด้วยเลขพัสดุ EMS</div>
-        <div class="text-xs text-slate-400">ระบุรหัสพัสดุไปรษณีย์ไทย 13 หลัก เช่น ED794967911TH เช็กสถานะนำจ่ายได้ทันที</div>
-      </div>
-
-      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs hover:border-indigo-300 transition">
-        <div class="w-12 h-12 mx-auto mb-3 bg-indigo-50 text-indigo-700 rounded-2xl flex items-center justify-center text-xl">
-          <i class="fa-solid fa-store"></i>
-        </div>
-        <div class="font-bold text-slate-800 text-sm mb-1">ค้นหาด้วยชื่อร้าน / ผู้รับ</div>
-        <div class="text-xs text-slate-400">พิมพ์ชื่อศูนย์บริการ ร้านค้าตัวแทน หรือจังหวัดปลายทางเพื่อกรองรายการจัดส่ง</div>
-      </div>
-    </div>
-
-    <!-- กรณีไม่พบข้อมูล -->
-    <div id="notFoundBox" class="hidden bg-rose-50 border border-rose-200 text-rose-700 p-6 rounded-3xl text-center">
-      <i class="fa-solid fa-circle-exclamation text-3xl mb-2 text-rose-500"></i>
-      <div class="font-bold text-base">ไม่พบข้อมูลตามคำค้นหาที่ระบุ</div>
-      <p class="text-xs text-rose-500 mt-1">โปรดตรวจสอบเลขที่ SO., หมายเลขพัสดุ EMS หรือชื่อร้านค้าอีกครั้ง</p>
-    </div>
-
-    <!-- ส่วนแสดงผลการค้นหา (จะแสดงเมื่อผู้ใช้ค้นหาเท่านั้น) -->
-    <div id="searchResultsSection" class="hidden space-y-6">
-
-      <!-- Active Result Card & 5-Step Visual Logistics Stepper -->
-      <div id="resultCard" class="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm transition-all duration-300">
-        
-        <!-- Top Bar: Status Badges & EMS Link -->
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-          <div>
-            <div class="flex flex-wrap items-center gap-2 mb-2">
-              <span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span id="cardStatusBadge">ส่งมอบบริษัทขนส่งเรียบร้อย (In Transit)</span>
-              </span>
-              <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-900 border border-blue-200" id="cardCustomer">
-                SCG-JWD-BKD
-              </span>
-              <span class="text-xs text-slate-400">
-                วันที่จัดส่ง: <b class="text-slate-700 font-mono" id="cardDate">-</b>
-              </span>
-            </div>
-
-            <h2 class="text-xl md:text-2xl font-bold text-slate-900 flex items-center gap-2">
-              <span id="cardShipTo">-</span>
-            </h2>
-            <p class="text-xs md:text-sm text-slate-500 mt-1 flex items-center gap-2">
-              <span><i class="fa-solid fa-location-dot text-carrier mr-1"></i>ปลายทาง: <b class="text-slate-800 font-semibold" id="cardProvince">-</b></span>
-              <span class="text-slate-300">|</span>
-              <span>เลขที่ Sales Order: <b class="font-mono text-carrier font-bold" id="cardSO">-</b></span>
-            </p>
+  <!-- ================= 2. หน้าเว็บหลัก (Main Portal - Search First) ================= -->
+  <div id="mainApp" class="hidden flex-1 flex flex-col justify-between">
+    
+    <!-- Navbar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+      <div class="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between">
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="resetToHome()">
+          <div class="bg-white px-2 py-1 rounded-xl border border-slate-200 flex items-center justify-center shadow-xs">
+            <img src="carrier-logo.png" alt="Carrier Logo" class="h-9 w-auto object-contain hidden" onload="this.classList.remove('hidden'); document.getElementById('svgLogoNav').style.display='none';">
+            <svg id="svgLogoNav" class="h-9 w-auto" viewBox="0 0 520 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="260" cy="120" rx="245" ry="102" fill="#041E70" stroke="#041E70" stroke-width="4"/>
+              <ellipse cx="260" cy="120" rx="234" ry="91" fill="none" stroke="#FFFFFF" stroke-width="6.5"/>
+              <text x="260" y="125" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" class="carrier-script" font-size="124" letter-spacing="-1">Carrier</text>
+            </svg>
           </div>
 
-          <!-- EMS Tracking & Button -->
-          <div class="flex flex-wrap items-center gap-3">
-            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center gap-3">
-              <div>
-                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">หมายเลขพัสดุ EMS</div>
-                <div class="font-mono text-base md:text-lg font-bold text-slate-900" id="cardTracking">-</div>
-              </div>
-              <button onclick="copyTrackingCode()" class="p-2 hover:bg-white text-slate-400 hover:text-carrier rounded-xl border border-transparent hover:border-slate-200 transition" title="คัดลอกเลขพัสดุ">
-                <i class="fa-regular fa-copy"></i>
-              </button>
-            </div>
+          <div class="h-8 w-px bg-slate-200"></div>
 
-            <a id="thailandPostBtn" href="#" target="_blank" class="px-5 py-3 bg-red-600 hover:bg-red-700 text-white rounded-2xl text-xs md:text-sm font-semibold flex items-center gap-2 shadow-sm transition active:scale-95">
-              <i class="fa-solid fa-truck-fast"></i>
-              <span>เช็กเว็บไปรษณีย์ไทย</span>
-              <i class="fa-solid fa-arrow-up-right-from-square text-[11px]"></i>
-            </a>
-          </div>
-        </div>
-
-        <!-- 5-Step Visual Stepper -->
-        <div class="pt-6">
-          <div class="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider mb-6">
-            <span>ขั้นตอนการจัดส่ง (Carrier Supply Chain)</span>
-            <span class="text-blue-700 font-semibold">ขั้นตอนที่ 3: รับพัสดุและอยู่ระหว่างนำส่ง</span>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
-            <!-- Step 1 -->
-            <div class="flex md:flex-col items-center gap-3 md:gap-2 text-left md:text-center p-2.5 rounded-xl bg-slate-50 md:bg-transparent">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-carrier text-white shadow-sm">
-                <i class="fa-solid fa-file-invoice"></i>
-              </div>
-              <div>
-                <div class="text-[11px] font-semibold text-slate-400">ขั้นตอนที่ 1</div>
-                <div class="text-xs font-bold text-slate-800">เปิดใบสั่งซื้อ SO</div>
-              </div>
-            </div>
-
-            <!-- Step 2 -->
-            <div class="flex md:flex-col items-center gap-3 md:gap-2 text-left md:text-center p-2.5 rounded-xl bg-slate-50 md:bg-transparent">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-carrier text-white shadow-sm">
-                <i class="fa-solid fa-boxes-stacked"></i>
-              </div>
-              <div>
-                <div class="text-[11px] font-semibold text-slate-400">ขั้นตอนที่ 2</div>
-                <div class="text-xs font-bold text-slate-800">คลัง SCG-JWD เบิกอะไหล่</div>
-              </div>
-            </div>
-
-            <!-- Step 3 -->
-            <div class="flex md:flex-col items-center gap-3 md:gap-2 text-left md:text-center p-2.5 rounded-xl bg-blue-50/50 md:bg-transparent border border-blue-200 md:border-0">
-              <div class="relative">
-                <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-blue-600 text-white shadow-md ring-4 ring-blue-100">
-                  <i class="fa-solid fa-box-open"></i>
-                </div>
-                <span class="absolute -top-1 -right-1 flex h-3 w-3">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
-                </span>
-              </div>
-              <div>
-                <div class="text-[11px] font-semibold text-blue-700">ขั้นตอนที่ 3 (ปัจจุบัน)</div>
-                <div class="text-xs font-bold text-blue-900">ส่งมอบ EMS เรียบร้อย</div>
-              </div>
-            </div>
-
-            <!-- Step 4 -->
-            <div class="flex md:flex-col items-center gap-3 md:gap-2 text-left md:text-center p-2.5 rounded-xl bg-slate-50 md:bg-transparent">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-emerald-600 text-white shadow-sm">
-                <i class="fa-solid fa-truck"></i>
-              </div>
-              <div>
-                <div class="text-[11px] font-semibold text-slate-400">ขั้นตอนที่ 4</div>
-                <div class="text-xs font-bold text-slate-800">EMS อยู่ระหว่างนำส่ง</div>
-              </div>
-            </div>
-
-            <!-- Step 5 -->
-            <div class="flex md:flex-col items-center gap-3 md:gap-2 text-left md:text-center p-2.5 rounded-xl bg-slate-50 md:bg-transparent">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-slate-100 text-slate-400 border border-slate-300">
-                <i class="fa-solid fa-circle-check"></i>
-              </div>
-              <div>
-                <div class="text-[11px] font-semibold text-slate-400">ขั้นตอนที่ 5</div>
-                <div class="text-xs font-medium text-slate-400">ปลายทางรับอะไหล่</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Result Records Table Section -->
-      <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
           <div>
             <div class="flex items-center space-x-2">
-              <h2 class="font-bold text-slate-900 text-base">รายการจัดส่งที่ตรงกับคำค้นหา</h2>
-              <span class="text-xs bg-blue-50 text-blue-900 border border-blue-200 px-2.5 py-0.5 rounded-full font-semibold" id="matchCount">0 รายการ</span>
+              <span class="font-bold text-slate-900 text-sm md:text-base leading-tight">Carrier Parts Tracking</span>
+              <span class="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-900 border border-blue-200">ระบบติดตามอะไหล่</span>
             </div>
-            <p class="text-slate-400 text-xs mt-0.5">คลิกแถวเพื่อเปลี่ยนการ์ดแสดงผลด้านบน</p>
+            <span class="text-[11px] text-slate-500 font-medium">B.GRIMM Carrier (Thailand) Limited</span>
           </div>
         </div>
 
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs md:text-sm text-slate-600">
-            <thead class="bg-slate-50 text-slate-500 uppercase font-semibold text-[11px] tracking-wider border-b border-slate-100">
-              <tr>
-                <th class="py-3.5 px-4">วันที่</th>
-                <th class="py-3.5 px-4">เลขที่ SO</th>
-                <th class="py-3.5 px-4">ผู้รับ (SHIP TO)</th>
-                <th class="py-3.5 px-4">จังหวัด</th>
-                <th class="py-3.5 px-4">ขนส่ง</th>
-                <th class="py-3.5 px-4">เลขพัสดุ (EMS)</th>
-                <th class="py-3.5 px-4 text-center">ดูสถานะ</th>
-              </tr>
-            </thead>
-            <tbody id="resultTableBody" class="divide-y divide-slate-100"></tbody>
-          </table>
+        <div class="flex items-center space-x-3">
+          <div id="syncBadge" class="hidden md:flex items-center space-x-2 text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span id="syncText">ฐานข้อมูลพร้อมใช้งาน</span>
+          </div>
+          <button onclick="handleLogout()" class="px-3 py-2 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 shadow-xs">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <span>ออกจากระบบ</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-4xl mx-auto px-4 py-10 flex-1 w-full space-y-8">
+
+      <!-- Hero Section -->
+      <div id="heroSection" class="text-center">
+        <div class="inline-flex items-center space-x-2 px-3 py-1 bg-blue-50 text-blue-900 rounded-full text-xs font-semibold mb-3 border border-blue-100">
+          <i class="fa-solid fa-snowflake text-carrier"></i>
+          <span>ระบบตรวจสอบสถานะการขนส่งอะไหล่เครื่องปรับอากาศแคเรียร์</span>
+        </div>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-2">ติดตามสถานะจัดส่งอะไหล่ แคเรียร์</h1>
+        <p class="text-slate-500 text-sm md:text-base max-w-xl mx-auto">
+          ระบุเลขที่ Sales Order (SO.), หมายเลขพัสดุ EMS หรือชื่อร้านตัวแทนจำหน่าย เพื่อตรวจสอบสถานะได้ทันที
+        </p>
+      </div>
+
+      <!-- Search Box (Search-First) -->
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8">
+        <div class="flex flex-col md:flex-row gap-3">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+            <input type="text" id="searchInput" onkeyup="if(event.key==='Enter') executeSearch()"
+                   placeholder="พิมพ์เลข SO (เช่น SO-BCT-260000071), เลข EMS หรือชื่อร้าน..." 
+                   class="w-full pl-14 pr-4 py-4 bg-slate-50 border border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white text-base transition">
+          </div>
+          <button onclick="executeSearch()" class="bg-carrier hover:opacity-95 text-white font-semibold px-8 py-4 rounded-2xl transition flex items-center justify-center space-x-2 text-base shadow-sm active:scale-95">
+            <span>ค้นหาข้อมูล</span>
+            <i class="fa-solid fa-arrow-right text-sm"></i>
+          </button>
+        </div>
+
+        <!-- Quick Chips & Clear Button -->
+        <div class="mt-5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <span class="font-medium text-slate-400"><i class="fa-solid fa-bolt text-amber-500 mr-1"></i>คลิกดูตัวอย่างทันที:</span>
+          <button onclick="quickSelect('SO-BCT-260000071')" class="px-3 py-1.5 bg-blue-50 text-blue-900 hover:bg-blue-100 rounded-xl border border-blue-200 font-mono font-medium transition">SO-BCT-260000071</button>
+          <button onclick="quickSelect('ED794967911TH')" class="px-3 py-1.5 bg-red-50 text-red-900 hover:bg-red-100 rounded-xl border border-red-200 font-mono font-medium transition">ED794967911TH</button>
+          <button onclick="quickSelect('บริษัทมหานคร แอร์คอน')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition">บริษัทมหานคร แอร์คอน</button>
+          <button onclick="quickSelect('ED794967664TH')" class="px-3 py-1.5 bg-amber-50 text-amber-900 hover:bg-amber-100 rounded-xl border border-amber-200 font-mono font-medium transition">ED794967664TH</button>
+          <button id="btnClear" onclick="resetToHome()" class="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl transition hidden ml-auto font-medium">
+            <i class="fa-solid fa-rotate-left mr-1"></i>ล้างการค้นหา
+          </button>
         </div>
       </div>
 
-    </div>
-
-    <!-- Toast Notification -->
-    <div id="toastMessage" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 text-xs rounded-xl font-medium bg-slate-900 text-white shadow-lg transition"></div>
-
-  </main>
-
-  <!-- Footer -->
-  <footer class="bg-white border-t border-slate-200 py-6 text-xs text-slate-500 mt-12">
-    <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-      <div class="flex items-center space-x-3">
-        <!-- Logo Footer ตามแบบภาพต้นฉบับล่าสุด -->
-        <div class="bg-white p-1 rounded-lg border border-slate-200 flex items-center justify-center shadow-xs">
-          <img src="carrier-logo.png" alt="Carrier Logo" class="h-7 w-auto object-contain hidden" onload="this.classList.remove('hidden'); document.getElementById('svgLogoFoot').style.display='none';">
-          <svg id="svgLogoFoot" class="h-7 w-auto" viewBox="0 0 520 240" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <ellipse cx="260" cy="120" rx="245" ry="102" fill="#041E70" stroke="#041E70" stroke-width="4"/>
-            <ellipse cx="260" cy="120" rx="234" ry="91" fill="none" stroke="#FFFFFF" stroke-width="6.5"/>
-            <text x="260" y="125" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" class="carrier-script" font-size="124">Carrier</text>
-          </svg>
+      <!-- ก่อนค้นหา: การ์ดคำแนะนำประเภทการค้นหา 3 กล่อง -->
+      <div id="initialGuidance" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center py-4">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs hover:border-blue-300 transition">
+          <div class="w-12 h-12 mx-auto mb-3 bg-blue-50 text-carrier rounded-2xl flex items-center justify-center text-xl">
+            <i class="fa-solid fa-file-invoice"></i>
+          </div>
+          <div class="font-bold text-slate-800 text-sm mb-1">ค้นหาด้วยเลขที่ Sales Order</div>
+          <div class="text-xs text-slate-400">ระบุเลข SO เช่น SO-BCT-260000071 เพื่อดูสถานะพัสดุทุกรายการ</div>
         </div>
-        <div>
-          <div class="font-bold text-slate-800 text-sm">Carrier Parts Tracking</div>
-          <div>ผู้จัดทำ: <strong>B.GRIMM Carrier (Thailand) Limited</strong></div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs hover:border-emerald-300 transition">
+          <div class="w-12 h-12 mx-auto mb-3 bg-emerald-50 text-emerald-700 rounded-2xl flex items-center justify-center text-xl">
+            <i class="fa-solid fa-box-open"></i>
+          </div>
+          <div class="font-bold text-slate-800 text-sm mb-1">ค้นหาด้วยเลขพัสดุ EMS</div>
+          <div class="text-xs text-slate-400">ระบุรหัสพัสดุไปรษณีย์ไทย 13 หลัก เช่น ED794967911TH เช็กสถานะนำจ่ายได้ทันที</div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs hover:border-indigo-300 transition">
+          <div class="w-12 h-12 mx-auto mb-3 bg-indigo-50 text-indigo-700 rounded-2xl flex items-center justify-center text-xl">
+            <i class="fa-solid fa-store"></i>
+          </div>
+          <div class="font-bold text-slate-800 text-sm mb-1">ค้นหาด้วยชื่อร้าน / ผู้รับ</div>
+          <div class="text-xs text-slate-400">พิมพ์ชื่อศูนย์บริการ ร้านค้าตัวแทน หรือจังหวัดปลายทางเพื่อกรองรายการจัดส่ง</div>
         </div>
       </div>
-      <div class="text-center md:text-right text-slate-400">
-        <div>ศูนย์บริการแคเรียร์ (Carrier Care) โทร. 1454</div>
-        <div class="text-[11px]">© 2026 B.GRIMM Carrier (Thailand) Limited. All rights reserved.</div>
+
+      <!-- กล่องแจ้งเตือนเมื่อไม่พบข้อมูล -->
+      <div id="notFoundBox" class="hidden bg-rose-50 border border-rose-200 text-rose-700 p-6 rounded-3xl text-center">
+        <i class="fa-solid fa-circle-exclamation text-3xl mb-2 text-rose-500"></i>
+        <div class="font-bold text-base">ไม่พบข้อมูลตามคำค้นหาที่ระบุ</div>
+        <p class="text-xs text-rose-500 mt-1">โปรดตรวจสอบเลขที่ SO., หมายเลขพัสดุ EMS หรือชื่อร้านค้าอีกครั้ง</p>
       </div>
-    </div>
-  </footer>
+
+      <!-- ส่วนผลการค้นหา (จะแสดงเมื่อเริ่มค้นหาแล้วเท่านั้น) -->
+      <div id="searchResultsSection" class="hidden space-y-6">
+
+        <!-- Result Card & 5-Step Visual Stepper -->
+        <div id="resultCard" class="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm transition-all duration-300">
+          
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+            <div>
+              <div class="flex flex-wrap items-center gap-2 mb-2">
+                <span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span id="cardStatusBadge">ส่งมอบบริษัทขนส่งเรียบร้อย (In Transit)</span>
+                </span>
+                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-900 border border-blue-200" id="cardCustomer">
+                  SCG-JWD-BKD
+                </span>
+                <span class="text-xs text-slate-400">
+                  วันที่จัดส่ง: <b class="text-slate-700 font-mono" id="cardDate">-</b>
+                </span>
+              </div>
+
+              <h2 class="text-xl md:text-2xl font-bold text-slate-900 flex items-center gap-2">
+                <span id="cardShipTo">-</span>
+              </h2>
+              <p class="text-xs md:text-sm text-slate-500 mt-1 flex items-center gap-2">
+                <span><i class="fa-solid fa-location-dot text-carrier mr-1"></i>ปลายทาง: <b class="text-slate-800 font-semibold" id="cardProvince">-</b></span>
+                <span class="text-slate-300">|</span>
+                <span>เลขที่ Sales Order: <b class="font-mono text-carrier font-bold" id="cardSO">-</b></span>
+              </p>
+            </div>
+
+            <!-- EMS Tracking & Direct Link -->
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center gap-3">
+                <div>
+                  <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">หมายเลขพัสดุ EMS</div>
+                  <div class="font-mono text-base md:text-lg font-bold text-slate-900" id="cardTracking">-</div>
+                </div>
+                <button onclick="copyTrackingCode()" class="p-2 hover:bg-white text-slate-400 hover:text-carrier rounded-xl border border-transparent hover:border-slate-200 transition" title="คัดลอกเลขพัสดุ">
+                  <i class="fa-regular fa-copy"></i>
+                </button>
+              </div>
+
+              <a id="thailandPostBtn" href="#" target="_blank" class="px-5 py-3 bg-red-600 hover:bg-red-700 text-white rounded-2xl text-xs md:text-sm font-semibold flex items-center gap-2 shadow-sm transition active:scale-95">
+                <i class="fa-solid fa-truck-fast"></i>
+                <span>เช็กเว็บไปรษณีย์ไทย</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[11px]"></i>
+              </a>
+            </div>
+          </div>
+
+          <!-- 5-Step Visual Stepper -->
+          <div class="pt-6">
+            <div class="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider mb-6">
+              <span>ขั้นตอนการจัดส่ง (Carrier Supply Chain)</span>
+              <span class="text-blue-700 font-semibold">ขั้นตอนที่ 3: รับพัสดุและอยู่ระหว่างนำส่ง</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+              <div class="flex md:flex-col items-center gap-3 md:gap-2 text-left md:text-center p-2.5 rounded-xl bg-slate-50 md:bg-transparent">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-carrier text-white shadow-sm">
+                  <i class="fa-solid fa-file-invoice"></i>
+                </div>
+                <div>
+                  <div class="text-[11px] font-semibold text-slate-400">ขั้นตอนที่ 1</div>
+                  <div class="text-xs font-bold text-slate-800">เปิดใบสั่งซื้อ SO</div>
+                </div>
+              </div>
+
+              <div class="flex md:flex-col items-center gap-3 md:gap-2 text-left md:text-center p-2.5 rounded-xl bg-slate-50 md:bg-transparent">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-carrier text-white shadow-sm">
+                  <i class="fa-solid fa-boxes-stacked"></i>
+                </div>
+                <div>
+                  <div class="text-[11px] font-semibold text-slate-400">ขั้นตอนที่ 2</div>
+                  <div class="text-xs font-bold text-slate-800">คลัง SCG-JWD เบิกอะไหล่</div>
+                </div>
+              </div>
+
+              <div class="flex md:flex-col items-center gap-3 md:gap-2 text-left md:text-center p-2.5 rounded-xl bg-blue-50/50 md:bg-transparent border border-blue-200 md:border-0">
+                <div class="relative">
+                  <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-blue-600 text-white shadow-md ring-4 ring-blue-100">
+                    <i class="fa-solid fa-box-open"></i>
+                  </div>
+                  <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                  </span>
+                </div>
+                <div>
+                  <div class="text-[11px] font-semibold text-blue-700">ขั้นตอนที่ 3 (ปัจจุบัน)</div>
+                  <div class="text-xs font-bold text-blue-900">ส่งมอบ EMS เรียบร้อย</div>
+                </div>
+              </div>
+
+              <div class="flex md:flex-col items-center gap-3 md:gap-2 text-left md:text-center p-2.5 rounded-xl bg-slate-50 md:bg-transparent">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-emerald-600 text-white shadow-sm">
+                  <i class="fa-solid fa-truck"></i>
+                </div>
+                <div>
+                  <div class="text-[11px] font-semibold text-slate-400">ขั้นตอนที่ 4</div>
+                  <div class="text-xs font-bold text-slate-800">EMS อยู่ระหว่างนำส่ง</div>
+                </div>
+              </div>
+
+              <div class="flex md:flex-col items-center gap-3 md:gap-2 text-left md:text-center p-2.5 rounded-xl bg-slate-50 md:bg-transparent">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-slate-100 text-slate-400 border border-slate-300">
+                  <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div>
+                  <div class="text-[11px] font-semibold text-slate-400">ขั้นตอนที่ 5</div>
+                  <div class="text-xs font-medium text-slate-400">ปลายทางรับอะไหล่</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Result Records Table Section -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <div class="flex items-center space-x-2">
+                <h2 class="font-bold text-slate-900 text-base">รายการจัดส่งที่ตรงกับคำค้นหา</h2>
+                <span class="text-xs bg-blue-50 text-blue-900 border border-blue-200 px-2.5 py-0.5 rounded-full font-semibold" id="matchCount">0 รายการ</span>
+              </div>
+              <p class="text-slate-400 text-xs mt-0.5">คลิกแถวเพื่อเปลี่ยนการ์ดแสดงผลด้านบน</p>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs md:text-sm text-slate-600">
+              <thead class="bg-slate-50 text-slate-500 uppercase font-semibold text-[11px] tracking-wider border-b border-slate-100">
+                <tr>
+                  <th class="py-3.5 px-4">วันที่</th>
+                  <th class="py-3.5 px-4">เลขที่ SO</th>
+                  <th class="py-3.5 px-4">ผู้รับ (SHIP TO)</th>
+                  <th class="py-3.5 px-4">จังหวัด</th>
+                  <th class="py-3.5 px-4">ขนส่ง</th>
+                  <th class="py-3.5 px-4">เลขพัสดุ (EMS)</th>
+                  <th class="py-3.5 px-4 text-center">ดูสถานะ</th>
+                </tr>
+              </thead>
+              <tbody id="resultTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Toast Notification -->
+      <div id="toastMessage" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 text-xs rounded-xl font-medium bg-slate-900 text-white shadow-lg transition"></div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 text-xs text-slate-500 mt-12">
+      <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+          <div class="bg-white p-1 rounded-lg border border-slate-200 flex items-center justify-center shadow-xs">
+            <img src="carrier-logo.png" alt="Carrier Logo" class="h-7 w-auto object-contain hidden" onload="this.classList.remove('hidden'); document.getElementById('svgLogoFoot').style.display='none';">
+            <svg id="svgLogoFoot" class="h-7 w-auto" viewBox="0 0 520 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="260" cy="120" rx="245" ry="102" fill="#041E70" stroke="#041E70" stroke-width="4"/>
+              <ellipse cx="260" cy="120" rx="234" ry="91" fill="none" stroke="#FFFFFF" stroke-width="6.5"/>
+              <text x="260" y="125" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" class="carrier-script" font-size="124">Carrier</text>
+            </svg>
+          </div>
+          <div>
+            <div class="font-bold text-slate-800 text-sm">Carrier Parts Tracking</div>
+            <div>ผู้จัดทำ: <strong>B.GRIMM Carrier (Thailand) Limited</strong></div>
+          </div>
+        </div>
+        <div class="text-center md:text-right text-slate-400">
+          <div>ศูนย์บริการแคเรียร์ (Carrier Care) โทร. 1454</div>
+          <div class="text-[11px]">© 2026 B.GRIMM Carrier (Thailand) Limited. All rights reserved.</div>
+        </div>
+      </div>
+    </footer>
+
+  </div>
 
   <script>
+    // ข้อมูลบัญชีผู้ใช้สำหรับเข้าสู่ระบบ (Username: carrier, Password: 123456)
+    const VALID_ACCOUNTS = [
+      { user: 'carrier', pass: '123456' }
+    ];
+
     const SHEET_ID = '1gqy5OnPiPwOVKrQgRDBSSQ8EkdCmqfCQmdH_m-ssQOY';
     
-    // ข้อมูลจริงจาก Google Sheets ล่วงหน้าเพื่อให้เห็นหน้าเว็บทันที
+    // ชุดข้อมูลจริงสำรองจาก Google Sheets
     const fallbackData = [
       { date: "8-Jan-26", so: "SO-BCT-260000071", customer: "SCG-JWD-BKD", shipTo: "บริษัทมหานคร แอร์คอน", province: "กทม", carrier: "EMS", tracking: "ED794967911TH" },
       { date: "8-Jan-26", so: "SO-BCT-260000140", customer: "SCG-JWD-BKD", shipTo: "บริษัทเอพีเอส", province: "กทม", carrier: "EMS", tracking: "ED794967664TH" },
@@ -353,6 +413,51 @@
 
     let allRecords = [...fallbackData];
 
+    // ตรวจสอบสิทธิ์การเข้าสู่ระบบเมื่อเปิดหน้าเว็บ
+    window.addEventListener('DOMContentLoaded', () => {
+      const isAuth = sessionStorage.getItem('carrier_auth');
+      if (isAuth === 'true') {
+        showMainApp();
+      }
+    });
+
+    // ฟังก์ชันจัดการการล็อกอิน
+    function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('usernameInput').value.trim();
+      const p = document.getElementById('passwordInput').value.trim();
+      const errBox = document.getElementById('loginError');
+
+      const match = VALID_ACCOUNTS.find(acc => acc.user.toLowerCase() === u.toLowerCase() && acc.pass === p);
+
+      if (match) {
+        sessionStorage.setItem('carrier_auth', 'true');
+        errBox.classList.add('hidden');
+        showMainApp();
+      } else {
+        errBox.classList.remove('hidden');
+      }
+    }
+
+    // ฟังก์ชันออกจากระบบ
+    function handleLogout() {
+      sessionStorage.removeItem('carrier_auth');
+      document.getElementById('mainApp').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+      document.getElementById('usernameInput').value = '';
+      document.getElementById('passwordInput').value = '';
+      document.getElementById('loginError').classList.add('hidden');
+    }
+
+    // แสดงหน้าค้นหาหลัก
+    function showMainApp() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('mainApp').classList.remove('hidden');
+      loadDataFromSheet();
+      setTimeout(() => document.getElementById('searchInput').focus(), 300);
+    }
+
+    // ดึงข้อมูลสดจาก Google Sheets
     async function loadDataFromSheet() {
       const gvizUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&tq=select%20*`;
       try {
@@ -385,15 +490,15 @@
       const badge = document.getElementById('syncBadge');
       const text = document.getElementById('syncText');
       if (success) {
-        badge.className = "flex items-center space-x-2 text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-full";
+        badge.className = "hidden md:flex items-center space-x-2 text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-full";
         text.innerText = isFallback ? `ฐานข้อมูลพร้อม (${count} รายการ)` : `ซิงค์ชีตสด (${count} รายการ)`;
       } else {
-        badge.className = "flex items-center space-x-2 text-xs bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1.5 rounded-full";
+        badge.className = "hidden md:flex items-center space-x-2 text-xs bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1.5 rounded-full";
         text.innerText = `เชื่อมต่อชีตขัดข้อง`;
       }
     }
 
-    // ทำการค้นหา และเปิดส่วนผลการค้นหา
+    // ทำการค้นหาข้อมูล
     function executeSearch() {
       const q = document.getElementById('searchInput').value.trim().toLowerCase();
       const guidance = document.getElementById('initialGuidance');
@@ -419,11 +524,8 @@
       if (matches.length > 0) {
         notFoundBox.classList.add('hidden');
         resultsSection.classList.remove('hidden');
-        
-        // แสดงการ์ดผลลัพธ์ของรายการแรกที่พบ
         showCard(matches[0]);
 
-        // อัปเดตตารางผลลัพธ์ทั้งหมด
         document.getElementById('matchCount').innerText = `${matches.length} รายการ`;
         const tbody = document.getElementById('resultTableBody');
         tbody.innerHTML = matches.map(item => `
@@ -442,7 +544,6 @@
           </tr>
         `).join('');
 
-        // เลื่อนหน้าจอลงมาดูผลการค้นหาอย่างนุ่มนวล
         window.scrollTo({ top: 320, behavior: 'smooth' });
       } else {
         resultsSection.classList.add('hidden');
@@ -455,7 +556,6 @@
       executeSearch();
     }
 
-    // ล้างค่าแล้วกลับสู่หน้าค้นหาเริ่มต้น (Search-First)
     function resetToHome() {
       document.getElementById('searchInput').value = '';
       document.getElementById('initialGuidance').classList.remove('hidden');
@@ -505,8 +605,6 @@
         toast.classList.add('hidden');
       }, 2500);
     }
-
-    window.addEventListener('DOMContentLoaded', loadDataFromSheet);
   </script>
 </body>
 </html>
