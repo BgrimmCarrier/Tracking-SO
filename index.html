@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Carrier Parts Tracking - B.GRIMM Carrier (Thailand) Limited</title>
+  <title>Carrier Tracking & Unit Lookup - B.GRIMM Carrier (Thailand) Limited</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body { font-family: 'Prompt', sans-serif; }
@@ -18,14 +18,26 @@
     .hover-flash:hover { background-color: #DDA200; }
     .bg-kex { background-color: #ED7100; }
     .hover-kex:hover { background-color: #CE6200; }
+    .bg-jnt { background-color: #E60012; }
+    .hover-jnt:hover { background-color: #B8000E; }
+    .bg-nim { background-color: #005BAC; }
+    .hover-nim:hover { background-color: #004582; }
     .carrier-script {
       font-family: 'Times New Roman', 'Bickham Script Pro', 'Brush Script MT', Georgia, serif;
       font-style: italic;
       font-weight: 700;
     }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .animate-shake {
+      animation: shake 0.4s ease-in-out;
+    }
   </style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col justify-between">
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col justify-between antialiased">
 
   <!-- ================= 1. หน้าต่างล็อกอิน (Gatekeeper Login Modal) ================= -->
   <div id="loginScreen" class="fixed inset-0 z-50 bg-slate-900/65 backdrop-blur-md flex items-center justify-center p-4">
@@ -49,10 +61,10 @@
       <!-- ข้อความแจ้งเตือนเมื่อรหัสผ่านผิด -->
       <div id="loginError" class="hidden mb-4 p-3.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-xs flex items-center space-x-2 text-left animate-shake">
         <i class="fa-solid fa-circle-exclamation text-rose-500 text-sm"></i>
-        <span>ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง (กรุณาลองใหม่อีกครั้ง)</span>
+        <span>ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง</span>
       </div>
 
-      <!-- ฟอร์มยืนยันตัวตน -->
+      <!-- ฟอร์มยืนยันตัวตน (ไม่มีวงเล็บ) -->
       <form onsubmit="handleLogin(event)" class="space-y-4 text-left">
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1.5">ชื่อผู้ใช้ Username</label>
@@ -68,7 +80,10 @@
           <div class="relative">
             <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
             <input type="password" id="passwordInput" required placeholder="ระบุรหัสผ่าน"
-                   class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white text-sm transition">
+                   class="w-full pl-11 pr-11 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white text-sm transition">
+            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
+              <i id="eyeIcon" class="fa-solid fa-eye text-sm"></i>
+            </button>
           </div>
         </div>
 
@@ -85,7 +100,7 @@
     </div>
   </div>
 
-  <!-- ================= 2. หน้าเว็บหลัก (Search-First Portal) ================= -->
+  <!-- ================= 2. หน้าเว็บหลัก (Main App Portal) ================= -->
   <div id="mainApp" class="hidden flex-1 flex flex-col justify-between">
     
     <!-- Navbar -->
@@ -106,7 +121,7 @@
           <div>
             <div class="flex items-center space-x-2">
               <span class="font-bold text-slate-900 text-sm md:text-base leading-tight">Carrier Parts Tracking</span>
-              <span class="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-900 border border-blue-200">ระบบติดตามอะไหล่</span>
+              <span class="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-900 border border-blue-200">ระบบติดตามอะไหล่ & ตัวเครื่อง</span>
             </div>
             <span class="text-[11px] text-slate-500 font-medium">B.GRIMM Carrier (Thailand) Limited</span>
           </div>
@@ -126,279 +141,534 @@
     </header>
 
     <!-- Main Container -->
-    <main class="max-w-4xl mx-auto px-4 py-10 flex-1 w-full space-y-8">
+    <main class="max-w-4xl mx-auto px-4 py-8 flex-1 w-full space-y-6">
 
-      <!-- Hero Section -->
-      <div id="heroSection" class="text-center">
-        <div class="inline-flex items-center space-x-2 px-3 py-1 bg-blue-50 text-blue-900 rounded-full text-xs font-semibold mb-3 border border-blue-100">
-          <i class="fa-solid fa-snowflake text-carrier"></i>
-          <span>ระบบตรวจสอบสถานะจัดส่งอะไหล่แท้ เครื่องปรับอากาศแคเรียร์</span>
-        </div>
-        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-2">ติดตามสถานะจัดส่งอะไหล่ แคเรียร์</h1>
-        <p class="text-slate-500 text-sm md:text-base max-w-xl mx-auto">
-          ระบุเลขที่ Sales Order (SO.), หมายเลขพัสดุ (EMS / Flash / KEX) หรือชื่อร้านตัวแทนจำหน่าย เพื่อตรวจสอบสถานะได้ทันที
-        </p>
+      <!-- แถบสลับ 2 โหมดการใช้งาน (Tab Switcher) -->
+      <div class="flex p-1.5 bg-slate-200/80 rounded-2xl max-w-xl mx-auto shadow-inner">
+        <button id="tabBtnParts" onclick="switchMainTab('parts')" 
+                class="flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-bold transition-all flex items-center justify-center gap-2 bg-white text-carrier shadow-sm">
+          <i class="fa-solid fa-boxes-packing"></i>
+          <span>ติดตามสถานะขนส่งอะไหล่</span>
+        </button>
+        <button id="tabBtnUnit" onclick="switchMainTab('unit')" 
+                class="flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900">
+          <i class="fa-solid fa-snowflake"></i>
+          <span>ตรวจสอบ รุ่น และ หมายเลขเครื่องปรับอากาศ</span>
+        </button>
       </div>
 
-      <!-- Search Box (Search-First) -->
-      <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8">
-        <div class="flex flex-col md:flex-row gap-3">
-          <div class="relative flex-1">
-            <i class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
-            <input type="text" id="searchInput" oninput="detectCarrierTracking()" onkeyup="if(event.key==='Enter') executeSearch()"
-                   placeholder="พิมพ์เลข SO., เลขพัสดุ (ไปรษณีย์ไทย / Flash / KEX) หรือชื่อร้าน..." 
-                   class="w-full pl-14 pr-4 py-4 bg-slate-50 border border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white text-base transition">
+      <!-- ================= TAB 1: ติดตามสถานะขนส่งอะไหล่ ================= -->
+      <div id="tabContentParts" class="space-y-8">
+
+        <!-- Hero Section Tab 1 -->
+        <div class="text-center">
+          <div class="inline-flex items-center space-x-2 px-3 py-1 bg-blue-50 text-blue-900 rounded-full text-xs font-semibold mb-3 border border-blue-100">
+            <i class="fa-solid fa-truck-fast text-carrier"></i>
+            <span>ระบบตรวจสอบสถานะจัดส่งอะไหล่แท้ เครื่องปรับอากาศแคเรียร์</span>
           </div>
-          <!-- ปุ่มค้นหาในระบบชีต -->
-          <button onclick="executeSearch()" class="bg-carrier hover:opacity-95 text-white font-semibold px-6 py-4 rounded-2xl transition flex items-center justify-center space-x-2 text-base shadow-sm active:scale-95">
-            <i class="fa-solid fa-magnifying-glass text-xs"></i>
-            <span>ค้นหาในระบบ</span>
-          </button>
+          <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-2">ติดตามสถานะจัดส่งอะไหล่ แคเรียร์</h1>
+          <p class="text-slate-500 text-sm md:text-base max-w-xl mx-auto">
+            ระบุเลขที่ Sales Order (SO.), หมายเลขพัสดุ (EMS / Flash / KEX) หรือชื่อร้านตัวแทนจำหน่าย เพื่อตรวจสอบสถานะได้ทันที
+          </p>
         </div>
 
-        <!-- แถบปุ่มลัด 3 ขนส่งหลัก (ไปรษณีย์ไทย, Flash Express, KEX) -->
-        <div class="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-          <div class="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
-            <i class="fa-solid fa-arrow-up-right-from-square text-slate-400"></i>
-            <span>ตรวจบนเว็บขนส่งโดยตรง:</span>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <button onclick="openExternalTracking('THPOST')" class="bg-thpost hover-thpost text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition flex items-center space-x-1.5 shadow-2xs active:scale-95">
-              <i class="fa-solid fa-truck"></i>
-              <span>ไปรษณีย์ไทย (EMS)</span>
-            </button>
-            <button onclick="openExternalTracking('FLASH')" class="bg-flash hover-flash text-slate-900 text-xs font-semibold px-3.5 py-2 rounded-xl transition flex items-center space-x-1.5 shadow-2xs active:scale-95">
-              <i class="fa-solid fa-bolt"></i>
-              <span>Flash Express</span>
-            </button>
-            <button onclick="openExternalTracking('KEX')" class="bg-kex hover-kex text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition flex items-center space-x-1.5 shadow-2xs active:scale-95">
-              <i class="fa-solid fa-box"></i>
-              <span>KEX (Kerry)</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- แถบตรวจจับรูปแบบเลขพัสดุอัตโนมัติขณะพิมพ์ (Auto-Detect Banner) -->
-        <div id="carrierDetectBanner" class="hidden mt-3 p-3.5 rounded-2xl flex items-center justify-between text-xs transition-all">
-          <div class="flex items-center space-x-2">
-            <i id="detectIcon" class="fa-solid fa-circle-info"></i>
-            <span>ตรวจพบเลขพัสดุ <strong id="detectedCarrierName"></strong>: <span id="detectedNumber" class="font-mono font-bold"></span></span>
-          </div>
-          <button id="detectActionBtn" onclick="" class="font-bold underline flex items-center gap-1 hover:opacity-80">
-            <span>เปิดหน้าติดตามพัสดุทันที</span>
-            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-          </button>
-        </div>
-
-        <!-- Quick Chips & Clear Button -->
-        <div class="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-          <span class="font-medium text-slate-400"><i class="fa-solid fa-bolt text-amber-500 mr-1"></i>ข้อมูลทดสอบจริง:</span>
-          <button onclick="quickSelect('SO-BCT-260000071')" class="px-3 py-1.5 bg-blue-50 text-blue-900 hover:bg-blue-100 rounded-xl border border-blue-200 font-mono font-medium transition">SO-BCT-260000071</button>
-          <button onclick="quickSelect('ED794967911TH')" class="px-3 py-1.5 bg-red-50 text-red-900 hover:bg-red-100 rounded-xl border border-red-200 font-mono font-medium transition">ED794967911TH (EMS)</button>
-          <button onclick="quickSelect('TH0123456789A')" class="px-3 py-1.5 bg-amber-50 text-amber-900 hover:bg-amber-100 rounded-xl border border-amber-200 font-mono font-medium transition">TH0123456789A (Flash)</button>
-          <button onclick="quickSelect('KEX99887766TH')" class="px-3 py-1.5 bg-orange-50 text-orange-900 hover:bg-orange-100 rounded-xl border border-orange-200 font-mono font-medium transition">KEX99887766TH (KEX)</button>
-          <button onclick="quickSelect('บริษัทมหานคร แอร์คอน')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition">บริษัทมหานคร แอร์คอน</button>
-          <button id="btnClear" onclick="resetToHome()" class="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl transition hidden ml-auto font-medium">
-            <i class="fa-solid fa-rotate-left mr-1"></i>ล้างการค้นหา
-          </button>
-        </div>
-      </div>
-
-      <!-- ก่อนค้นหา: การ์ดคำแนะนำประเภทการค้นหา 3 กล่อง -->
-      <div id="initialGuidance" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center py-2">
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs hover:border-blue-300 transition">
-          <div class="w-12 h-12 mx-auto mb-3 bg-blue-50 text-blue-800 rounded-2xl flex items-center justify-center text-xl">
-            <i class="fa-solid fa-file-invoice"></i>
-          </div>
-          <div class="font-bold text-slate-800 text-sm mb-1">ค้นหาด้วยเลขที่ Sales Order</div>
-          <div class="text-xs text-slate-500 leading-relaxed">ระบุเลข SO เช่น SO-BCT-260000071 เพื่อดูสถานะพัสดุทุกรายการ</div>
-        </div>
-
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs hover:border-red-300 transition">
-          <div class="w-12 h-12 mx-auto mb-3 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center text-xl">
-            <i class="fa-solid fa-truck"></i>
-          </div>
-          <div class="font-bold text-slate-800 text-sm mb-1">ค้นหาด้วยเลขพัสดุ EMS</div>
-          <div class="text-xs text-slate-500 leading-relaxed">ระบุรหัสพัสดุไปรษณีย์ไทย 13 หลัก เช่น ED794967911TH เช็กสถานะนำจ่ายได้ทันที</div>
-        </div>
-
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs hover:border-indigo-300 transition">
-          <div class="w-12 h-12 mx-auto mb-3 bg-indigo-50 text-indigo-700 rounded-2xl flex items-center justify-center text-xl">
-            <i class="fa-solid fa-store"></i>
-          </div>
-          <div class="font-bold text-slate-800 text-sm mb-1">ค้นหาด้วยชื่อร้าน / ผู้รับ</div>
-          <div class="text-xs text-slate-500 leading-relaxed">พิมพ์ชื่อศูนย์บริการ ร้านค้าตัวแทน หรือจังหวัดปลายทางเพื่อกรองรายการจัดส่ง</div>
-        </div>
-      </div>
-
-      <!-- กล่องแจ้งเตือนเมื่อไม่พบข้อมูลใน Google Sheets -->
-      <div id="notFoundBox" class="hidden bg-slate-100 border border-slate-200 p-6 md:p-8 rounded-3xl text-center space-y-3">
-        <i class="fa-solid fa-magnifying-glass text-3xl text-slate-400"></i>
-        <div class="font-bold text-base text-slate-800">ไม่พบข้อมูลในฐานข้อมูลของชีต Carrier</div>
-        <p class="text-xs text-slate-500 max-w-md mx-auto">
-          หากท่านต้องการเช็กสถานะพัสดุโดยตรง สามารถกดเลือกผู้ให้บริการขนส่งเพื่อตรวจสอบได้ทันที:
-        </p>
-        <div class="flex flex-wrap justify-center gap-2 pt-2">
-          <button onclick="openExternalTracking('THPOST')" class="bg-thpost hover-thpost text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5">
-            <i class="fa-solid fa-truck"></i><span>เช็กบนไปรษณีย์ไทย</span>
-          </button>
-          <button onclick="openExternalTracking('FLASH')" class="bg-flash hover-flash text-slate-900 px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5">
-            <i class="fa-solid fa-bolt"></i><span>เช็กบน Flash Express</span>
-          </button>
-          <button onclick="openExternalTracking('KEX')" class="bg-kex hover-kex text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5">
-            <i class="fa-solid fa-box"></i><span>เช็กบน KEX (Kerry)</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- ส่วนผลการค้นหา (จะแสดงเมื่อเริ่มค้นหาแล้วเท่านั้น) -->
-      <div id="searchResultsSection" class="hidden space-y-6">
-
-        <!-- Result Card & 5-Step Visual Stepper -->
-        <div id="resultCard" class="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm transition-all duration-300">
-          
-          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-            <div>
-              <div class="flex flex-wrap items-center gap-2 mb-2">
-                <span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span id="cardStatusBadge">ส่งมอบบริษัทขนส่งเรียบร้อย (In Transit)</span>
-                </span>
-                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-900 border border-blue-200" id="cardCustomer">
-                  SCG-JWD-BKD
-                </span>
-                <span class="text-xs text-slate-400">
-                  วันที่จัดส่ง: <b class="text-slate-700 font-mono" id="cardDate">-</b>
-                </span>
-              </div>
-
-              <h2 class="text-xl md:text-2xl font-bold text-slate-900 flex items-center gap-2">
-                <span id="cardShipTo">-</span>
-              </h2>
-              <p class="text-xs md:text-sm text-slate-500 mt-1 flex items-center gap-2">
-                <span><i class="fa-solid fa-location-dot text-carrier mr-1"></i>ปลายทาง: <b class="text-slate-800 font-semibold" id="cardProvince">-</b></span>
-                <span class="text-slate-300">|</span>
-                <span>เลขที่ Sales Order: <b class="font-mono text-carrier font-bold" id="cardSO">-</b></span>
-              </p>
+        <!-- Search Box (Search-First) -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8">
+          <div class="flex flex-col md:flex-row gap-3">
+            <div class="relative flex-1">
+              <i class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+              <input type="text" id="searchInput" oninput="detectCarrierTracking()" onkeyup="if(event.key==='Enter') executeSearch()"
+                     placeholder="พิมพ์เลข SO., เลขพัสดุ (EMS / Flash / KEX / J&T / Nim Express) หรือชื่อร้าน..." 
+                     class="w-full pl-14 pr-4 py-4 bg-slate-50 border border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white text-base transition">
             </div>
+            <!-- ปุ่มค้นหาในระบบชีต -->
+            <button onclick="executeSearch()" class="bg-carrier hover:opacity-95 text-white font-semibold px-6 py-4 rounded-2xl transition flex items-center justify-center space-x-2 text-base shadow-sm active:scale-95">
+              <i class="fa-solid fa-magnifying-glass text-xs"></i>
+              <span>ค้นหาในระบบ</span>
+            </button>
+          </div>
 
-            <!-- Tracking Code & Direct External Link Button -->
-            <div class="flex flex-wrap items-center gap-3">
-              <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center gap-3">
-                <div>
-                  <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                    <span id="cardCarrierLabel">พัสดุ</span>
-                  </div>
-                  <div class="font-mono text-base md:text-lg font-bold text-slate-900" id="cardTracking">-</div>
-                </div>
-                <button onclick="copyTrackingCode()" class="p-2 hover:bg-white text-slate-400 hover:text-carrier rounded-xl border border-transparent hover:border-slate-200 transition" title="คัดลอกเลขพัสดุ">
-                  <i class="fa-regular fa-copy"></i>
-                </button>
-              </div>
-
-              <button id="cardExternalBtn" onclick="" class="px-5 py-3 rounded-2xl text-xs md:text-sm font-semibold flex items-center gap-2 shadow-sm transition active:scale-95 text-white">
-                <span id="cardExternalBtnText">เปิดเว็บขนส่ง</span>
-                <i class="fa-solid fa-arrow-up-right-from-square text-[11px]"></i>
+          <!-- แถบปุ่มลัด 5 ขนส่งหลัก (ไปรษณีย์ไทย, Flash Express, KEX, J&T, Nim Express) -->
+          <div class="mt-4 pt-4 border-t border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="text-xs font-semibold text-slate-500 flex items-center gap-1.5 shrink-0">
+              <i class="fa-solid fa-arrow-up-right-from-square text-slate-400"></i>
+              <span>ตรวจบนเว็บขนส่งโดยตรง:</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="openExternalTracking('THPOST')" class="bg-thpost hover-thpost text-white text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center space-x-1.5 shadow-2xs active:scale-95">
+                <i class="fa-solid fa-truck"></i>
+                <span>ไปรษณีย์ไทย</span>
+              </button>
+              <button onclick="openExternalTracking('FLASH')" class="bg-flash hover-flash text-slate-900 text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center space-x-1.5 shadow-2xs active:scale-95">
+                <i class="fa-solid fa-bolt"></i>
+                <span>Flash Express</span>
+              </button>
+              <button onclick="openExternalTracking('KEX')" class="bg-kex hover-kex text-white text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center space-x-1.5 shadow-2xs active:scale-95">
+                <i class="fa-solid fa-box"></i>
+                <span>KEX (Kerry)</span>
+              </button>
+              <button onclick="openExternalTracking('JNT')" class="bg-jnt hover-jnt text-white text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center space-x-1.5 shadow-2xs active:scale-95">
+                <i class="fa-solid fa-truck-fast"></i>
+                <span>J&T Express</span>
+              </button>
+              <button onclick="openExternalTracking('NIM')" class="bg-nim hover-nim text-white text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center space-x-1.5 shadow-2xs active:scale-95">
+                <i class="fa-solid fa-dolly"></i>
+                <span>Nim Express</span>
               </button>
             </div>
           </div>
 
-          <!-- 5-Step Visual Stepper -->
-          <div class="pt-6">
-            <div class="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider mb-6">
-              <span>ขั้นตอนการจัดส่ง (Carrier Supply Chain)</span>
-              <span class="text-blue-700 font-semibold">ขั้นตอนที่ 3: ส่งมอบขนส่งแล้ว อยู่ระหว่างนำส่ง</span>
+          <!-- แถบตรวจจับรูปแบบเลขพัสดุอัตโนมัติขณะพิมพ์ (Auto-Detect Banner) -->
+          <div id="carrierDetectBanner" class="hidden mt-3 p-3.5 rounded-2xl flex items-center justify-between text-xs transition-all">
+            <div class="flex items-center space-x-2">
+              <i id="detectIcon" class="fa-solid fa-circle-info"></i>
+              <span>ตรวจพบเลขพัสดุ <strong id="detectedCarrierName"></strong>: <span id="detectedNumber" class="font-mono font-bold"></span></span>
             </div>
+            <button id="detectActionBtn" onclick="" class="font-bold underline flex items-center gap-1 hover:opacity-80">
+              <span>เปิดหน้าติดตามพัสดุทันที</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+            </button>
+          </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
-              <div class="flex md:flex-col items-center gap-3 md:gap-2 text-left md:text-center p-2.5 rounded-xl bg-slate-50 md:bg-transparent">
-                <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-carrier text-white shadow-sm">
-                  <i class="fa-solid fa-file-invoice"></i>
-                </div>
-                <div>
-                  <div class="text-[11px] font-semibold text-slate-400">ขั้นตอนที่ 1</div>
-                  <div class="text-xs font-bold text-slate-800">เปิดใบสั่งซื้อ SO</div>
-                </div>
-              </div>
+          <!-- Quick Chips & Clear Button -->
+          <div class="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+            <span class="font-medium text-slate-400"><i class="fa-solid fa-bolt text-amber-500 mr-1"></i>ข้อมูลทดสอบจริง:</span>
+            <button onclick="quickSelect('SO-BCT-260000071')" class="px-3 py-1.5 bg-blue-50 text-blue-900 hover:bg-blue-100 rounded-xl border border-blue-200 font-mono font-medium transition">SO-BCT-260000071</button>
+            <button onclick="quickSelect('ED794967911TH')" class="px-3 py-1.5 bg-red-50 text-red-900 hover:bg-red-100 rounded-xl border border-red-200 font-mono font-medium transition">ED794967911TH (EMS)</button>
+            <button onclick="quickSelect('TH0123456789A')" class="px-3 py-1.5 bg-amber-50 text-amber-900 hover:bg-amber-100 rounded-xl border border-amber-200 font-mono font-medium transition">TH0123456789A (Flash)</button>
+            <button onclick="quickSelect('KEX99887766TH')" class="px-3 py-1.5 bg-orange-50 text-orange-900 hover:bg-orange-100 rounded-xl border border-orange-200 font-mono font-medium transition">KEX99887766TH (KEX)</button>
+            <button onclick="quickSelect('JNT66778899TH')" class="px-3 py-1.5 bg-rose-50 text-rose-900 hover:bg-rose-100 rounded-xl border border-rose-200 font-mono font-medium transition">JNT66778899TH (J&T)</button>
+            <button onclick="quickSelect('NIM11223344TH')" class="px-3 py-1.5 bg-sky-50 text-sky-900 hover:bg-sky-100 rounded-xl border border-sky-200 font-mono font-medium transition">NIM11223344TH (Nim)</button>
+            <button onclick="quickSelect('บริษัทมหานคร แอร์คอน')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition">บริษัทมหานคร แอร์คอน</button>
+            <button id="btnClear" onclick="resetToHome()" class="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl transition hidden ml-auto font-medium">
+              <i class="fa-solid fa-rotate-left mr-1"></i>ล้างการค้นหา
+            </button>
+          </div>
+        </div>
 
-              <div class="flex md:flex-col items-center gap-3 md:gap-2 text-left md:text-center p-2.5 rounded-xl bg-slate-50 md:bg-transparent">
-                <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-carrier text-white shadow-sm">
-                  <i class="fa-solid fa-boxes-stacked"></i>
-                </div>
-                <div>
-                  <div class="text-[11px] font-semibold text-slate-400">ขั้นตอนที่ 2</div>
-                  <div class="text-xs font-bold text-slate-800">คลัง SCG เบิกอะไหล่</div>
-                </div>
-              </div>
+        <!-- ก่อนค้นหา: การ์ดคำแนะนำประเภทการค้นหา 3 กล่อง -->
+        <div id="initialGuidance" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center py-2">
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs hover:border-blue-300 transition">
+            <div class="w-12 h-12 mx-auto mb-3 bg-blue-50 text-blue-800 rounded-2xl flex items-center justify-center text-xl">
+              <i class="fa-solid fa-file-invoice"></i>
+            </div>
+            <div class="font-bold text-slate-800 text-sm mb-1">ค้นหาด้วยเลขที่ Sales Order</div>
+            <div class="text-xs text-slate-500 leading-relaxed">ระบุเลข SO เช่น SO-BCT-260000071 เพื่อดูสถานะพัสดุทุกรายการ</div>
+          </div>
 
-              <div class="flex md:flex-col items-center gap-3 md:gap-2 text-left md:text-center p-2.5 rounded-xl bg-blue-50/50 md:bg-transparent border border-blue-200 md:border-0">
-                <div class="relative">
-                  <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-blue-600 text-white shadow-md ring-4 ring-blue-100">
-                    <i class="fa-solid fa-box-open"></i>
-                  </div>
-                  <span class="absolute -top-1 -right-1 flex h-3 w-3">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs hover:border-red-300 transition">
+            <div class="w-12 h-12 mx-auto mb-3 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center text-xl">
+              <i class="fa-solid fa-truck"></i>
+            </div>
+            <div class="font-bold text-slate-800 text-sm mb-1">ค้นหาด้วยเลขพัสดุ EMS</div>
+            <div class="text-xs text-slate-500 leading-relaxed">ระบุรหัสพัสดุไปรษณีย์ไทย 13 หลัก เช่น ED794967911TH เช็กสถานะนำจ่ายได้ทันที</div>
+          </div>
+
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs hover:border-indigo-300 transition">
+            <div class="w-12 h-12 mx-auto mb-3 bg-indigo-50 text-indigo-700 rounded-2xl flex items-center justify-center text-xl">
+              <i class="fa-solid fa-store"></i>
+            </div>
+            <div class="font-bold text-slate-800 text-sm mb-1">ค้นหาด้วยชื่อร้าน / ผู้รับ</div>
+            <div class="text-xs text-slate-500 leading-relaxed">พิมพ์ชื่อศูนย์บริการ ร้านค้าตัวแทน หรือจังหวัดปลายทางเพื่อกรองรายการจัดส่ง</div>
+          </div>
+        </div>
+
+        <!-- กล่องแจ้งเตือนเมื่อไม่พบข้อมูลใน Google Sheets -->
+        <div id="notFoundBox" class="hidden bg-slate-100 border border-slate-200 p-6 md:p-8 rounded-3xl text-center space-y-3">
+          <i class="fa-solid fa-magnifying-glass text-3xl text-slate-400"></i>
+          <div class="font-bold text-base text-slate-800">ไม่พบข้อมูลในฐานข้อมูลของชีต Carrier</div>
+          <p class="text-xs text-slate-500 max-w-md mx-auto">
+            หากท่านต้องการเช็กสถานะพัสดุโดยตรง สามารถกดเลือกผู้ให้บริการขนส่งเพื่อตรวจสอบได้ทันที:
+          </p>
+          <div class="flex flex-wrap justify-center gap-2 pt-2">
+            <button onclick="openExternalTracking('THPOST')" class="bg-thpost hover-thpost text-white px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+              <i class="fa-solid fa-truck"></i><span>ไปรษณีย์ไทย</span>
+            </button>
+            <button onclick="openExternalTracking('FLASH')" class="bg-flash hover-flash text-slate-900 px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+              <i class="fa-solid fa-bolt"></i><span>Flash Express</span>
+            </button>
+            <button onclick="openExternalTracking('KEX')" class="bg-kex hover-kex text-white px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+              <i class="fa-solid fa-box"></i><span>KEX (Kerry)</span>
+            </button>
+            <button onclick="openExternalTracking('JNT')" class="bg-jnt hover-jnt text-white px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+              <i class="fa-solid fa-truck-fast"></i><span>J&T Express</span>
+            </button>
+            <button onclick="openExternalTracking('NIM')" class="bg-nim hover-nim text-white px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+              <i class="fa-solid fa-dolly"></i><span>Nim Express</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ส่วนผลการค้นหา Tab 1 -->
+        <div id="searchResultsSection" class="hidden space-y-6">
+
+          <!-- Result Card & 5-Step Visual Stepper -->
+          <div id="resultCard" class="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm transition-all duration-300">
+            
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+              <div>
+                <div class="flex flex-wrap items-center gap-2 mb-2">
+                  <span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="cardStatusBadge">ส่งมอบบริษัทขนส่งเรียบร้อย (In Transit)</span>
+                  </span>
+                  <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-900 border border-blue-200" id="cardCustomer">
+                    SCG-JWD-BKD
+                  </span>
+                  <span class="text-xs text-slate-400">
+                    วันที่จัดส่ง: <b class="text-slate-700 font-mono" id="cardDate">-</b>
                   </span>
                 </div>
-                <div>
-                  <div class="text-[11px] font-semibold text-blue-700">ขั้นตอนที่ 3 (ปัจจุบัน)</div>
-                  <div class="text-xs font-bold text-blue-900">ส่งมอบขนส่งเรียบร้อย</div>
-                </div>
+
+                <h2 class="text-xl md:text-2xl font-bold text-slate-900 flex items-center gap-2">
+                  <span id="cardShipTo">-</span>
+                </h2>
+                <p class="text-xs md:text-sm text-slate-500 mt-1 flex items-center gap-2">
+                  <span><i class="fa-solid fa-location-dot text-carrier mr-1"></i>ปลายทาง: <b class="text-slate-800 font-semibold" id="cardProvince">-</b></span>
+                  <span class="text-slate-300">|</span>
+                  <span>เลขที่ Sales Order: <b class="font-mono text-carrier font-bold" id="cardSO">-</b></span>
+                </p>
               </div>
 
-              <div class="flex md:flex-col items-center gap-3 md:gap-2 text-left md:text-center p-2.5 rounded-xl bg-slate-50 md:bg-transparent">
-                <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-emerald-600 text-white shadow-sm">
-                  <i class="fa-solid fa-truck"></i>
+              <!-- Tracking Code & Direct External Link Button -->
+              <div class="flex flex-wrap items-center gap-3">
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center gap-3">
+                  <div>
+                    <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                      <span id="cardCarrierLabel">พัสดุ</span>
+                    </div>
+                    <div class="font-mono text-base md:text-lg font-bold text-slate-900" id="cardTracking">-</div>
+                  </div>
+                  <button onclick="copyTrackingCode()" class="p-2 hover:bg-white text-slate-400 hover:text-carrier rounded-xl border border-transparent hover:border-slate-200 transition" title="คัดลอกเลขพัสดุ">
+                    <i class="fa-regular fa-copy"></i>
+                  </button>
                 </div>
-                <div>
-                  <div class="text-[11px] font-semibold text-slate-400">ขั้นตอนที่ 4</div>
-                  <div class="text-xs font-bold text-slate-800">ขนส่งอยู่ระหว่างนำจ่าย</div>
-                </div>
+
+                <button id="cardExternalBtn" onclick="" class="px-5 py-3 rounded-2xl text-xs md:text-sm font-semibold flex items-center gap-2 shadow-sm transition active:scale-95 text-white">
+                  <span id="cardExternalBtnText">เปิดเว็บขนส่ง</span>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-[11px]"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- 5-Step Visual Stepper -->
+            <div class="pt-6">
+              <div class="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider mb-6">
+                <span>ขั้นตอนการจัดส่ง (Carrier Supply Chain)</span>
+                <span class="text-blue-700 font-semibold">ขั้นตอนที่ 3: ส่งมอบขนส่งแล้ว อยู่ระหว่างนำส่ง</span>
               </div>
 
-              <div class="flex md:flex-col items-center gap-3 md:gap-2 text-left md:text-center p-2.5 rounded-xl bg-slate-50 md:bg-transparent">
-                <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-slate-100 text-slate-400 border border-slate-300">
-                  <i class="fa-solid fa-circle-check"></i>
+              <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                <div class="flex md:flex-col items-center gap-3 md:gap-2 text-left md:text-center p-2.5 rounded-xl bg-slate-50 md:bg-transparent">
+                  <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-carrier text-white shadow-sm">
+                    <i class="fa-solid fa-file-invoice"></i>
+                  </div>
+                  <div>
+                    <div class="text-[11px] font-semibold text-slate-400">ขั้นตอนที่ 1</div>
+                    <div class="text-xs font-bold text-slate-800">เปิดใบสั่งซื้อ SO</div>
+                  </div>
                 </div>
-                <div>
-                  <div class="text-[11px] font-semibold text-slate-400">ขั้นตอนที่ 5</div>
-                  <div class="text-xs font-medium text-slate-400">ปลายทางรับอะไหล่</div>
+
+                <div class="flex md:flex-col items-center gap-3 md:gap-2 text-left md:text-center p-2.5 rounded-xl bg-slate-50 md:bg-transparent">
+                  <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-carrier text-white shadow-sm">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                  </div>
+                  <div>
+                    <div class="text-[11px] font-semibold text-slate-400">ขั้นตอนที่ 2</div>
+                    <div class="text-xs font-bold text-slate-800">คลัง SCG เบิกอะไหล่</div>
+                  </div>
+                </div>
+
+                <div class="flex md:flex-col items-center gap-3 md:gap-2 text-left md:text-center p-2.5 rounded-xl bg-blue-50/50 md:bg-transparent border border-blue-200 md:border-0">
+                  <div class="relative">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-blue-600 text-white shadow-md ring-4 ring-blue-100">
+                      <i class="fa-solid fa-box-open"></i>
+                    </div>
+                    <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                    </span>
+                  </div>
+                  <div>
+                    <div class="text-[11px] font-semibold text-blue-700">ขั้นตอนที่ 3 (ปัจจุบัน)</div>
+                    <div class="text-xs font-bold text-blue-900">ส่งมอบขนส่งเรียบร้อย</div>
+                  </div>
+                </div>
+
+                <div class="flex md:flex-col items-center gap-3 md:gap-2 text-left md:text-center p-2.5 rounded-xl bg-slate-50 md:bg-transparent">
+                  <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-emerald-600 text-white shadow-sm">
+                    <i class="fa-solid fa-truck"></i>
+                  </div>
+                  <div>
+                    <div class="text-[11px] font-semibold text-slate-400">ขั้นตอนที่ 4</div>
+                    <div class="text-xs font-bold text-slate-800">ขนส่งอยู่ระหว่างนำจ่าย</div>
+                  </div>
+                </div>
+
+                <div class="flex md:flex-col items-center gap-3 md:gap-2 text-left md:text-center p-2.5 rounded-xl bg-slate-50 md:bg-transparent">
+                  <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-slate-100 text-slate-400 border border-slate-300">
+                    <i class="fa-solid fa-circle-check"></i>
+                  </div>
+                  <div>
+                    <div class="text-[11px] font-semibold text-slate-400">ขั้นตอนที่ 5</div>
+                    <div class="text-xs font-medium text-slate-400">ปลายทางรับอะไหล่</div>
+                  </div>
                 </div>
               </div>
+            </div>
+
+          </div>
+
+          <!-- Result Records Table Section -->
+          <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <div class="flex items-center space-x-2">
+                  <h2 class="font-bold text-slate-900 text-base">รายการจัดส่งที่ตรงกับคำค้นหา</h2>
+                  <span class="text-xs bg-blue-50 text-blue-900 border border-blue-200 px-2.5 py-0.5 rounded-full font-semibold" id="matchCount">0 รายการ</span>
+                </div>
+                <p class="text-slate-400 text-xs mt-0.5">คลิกแถวเพื่อดูรายละเอียดบนการ์ดด้านบน</p>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs md:text-sm text-slate-600">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-semibold text-[11px] tracking-wider border-b border-slate-100">
+                  <tr>
+                    <th class="py-3.5 px-4">วันที่</th>
+                    <th class="py-3.5 px-4">เลขที่ SO</th>
+                    <th class="py-3.5 px-4">ผู้รับ (SHIP TO)</th>
+                    <th class="py-3.5 px-4">จังหวัด</th>
+                    <th class="py-3.5 px-4">ขนส่ง</th>
+                    <th class="py-3.5 px-4">เลขพัสดุ</th>
+                    <th class="py-3.5 px-4 text-center">ดูสถานะ</th>
+                  </tr>
+                </thead>
+                <tbody id="resultTableBody" class="divide-y divide-slate-100"></tbody>
+              </table>
             </div>
           </div>
 
         </div>
 
-        <!-- Result Records Table Section -->
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-          <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+      </div>
+
+      <!-- ================= TAB 2: เช็กรุ่น & หมายเลขเครื่องแอร์ (2 Separate Fields) ================= -->
+      <div id="tabContentUnit" class="hidden space-y-8">
+
+        <!-- Hero Section Tab 2 -->
+        <div class="text-center">
+          <div class="inline-flex items-center space-x-2 px-3 py-1 bg-indigo-50 text-indigo-900 rounded-full text-xs font-semibold mb-3 border border-indigo-100">
+            <i class="fa-solid fa-snowflake text-indigo-700"></i>
+            <span>ระบบสืบค้นข้อมูลเครื่องปรับอากาศ (Unit & Serial Tracker)</span>
+          </div>
+          <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-2">ตรวจสอบ รุ่น และ หมายเลขเครื่องปรับอากาศ</h1>
+          <p class="text-slate-500 text-sm md:text-base max-w-xl mx-auto">
+            ตรวจสอบว่าเครื่องปรับอากาศรุ่นนี้ หรือหมายเลขเครื่องนี้ ออกด้วย <b>SO เลขที่ใด</b>, ส่งออกด้วย <b>เลขพัสดุใด</b> และจัดส่งให้ <b>ลูกค้าหรือร้านค้าใด</b>
+          </p>
+        </div>
+
+        <!-- Search Box แยก 2 ช่องตามความต้องการ: รุ่นแอร์ และ หมายเลขเครื่อง -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            
+            <!-- ช่องที่ 1: รุ่นเครื่องปรับอากาศ (Model No.) -->
             <div>
-              <div class="flex items-center space-x-2">
-                <h2 class="font-bold text-slate-900 text-base">รายการจัดส่งที่ตรงกับคำค้นหา</h2>
-                <span class="text-xs bg-blue-50 text-blue-900 border border-blue-200 px-2.5 py-0.5 rounded-full font-semibold" id="matchCount">0 รายการ</span>
+              <label class="block text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+                <i class="fa-solid fa-tag text-blue-700"></i>
+                <span>รุ่นเครื่องปรับอากาศ (Model No.)</span>
+              </label>
+              <div class="relative">
+                <i class="fa-solid fa-snowflake absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input type="text" id="unitModelInput" onkeyup="if(event.key==='Enter') executeUnitSearch()"
+                       placeholder="เช่น 42TVAB010, 42TSAA012, 42TVDA010" 
+                       class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:bg-white text-sm transition">
               </div>
-              <p class="text-slate-400 text-xs mt-0.5">คลิกแถวเพื่อดูรายละเอียดบนการ์ดด้านบน</p>
+              <p class="text-[11px] text-slate-400 mt-1">ระบุเฉพาะรุ่นเพื่อดูประวัติเครื่องปรับอากาศในรุ่นนั้นทั้งหมด</p>
+            </div>
+
+            <!-- ช่องที่ 2: หมายเลขเครื่อง (Serial No. / S/N) -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+                <i class="fa-solid fa-barcode text-indigo-700"></i>
+                <span>หมายเลขเครื่อง (Serial No. / S/N)</span>
+              </label>
+              <div class="relative">
+                <i class="fa-solid fa-fingerprint absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input type="text" id="unitSerialInput" onkeyup="if(event.key==='Enter') executeUnitSearch()"
+                       placeholder="เช่น SN-BCT2601001, 1224B12345" 
+                       class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:bg-white text-sm transition font-mono">
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">ระบุหมายเลขประจำตัวเครื่อง 10-15 หลักเพื่อเจาะจงเครื่องโดยตรง</p>
+            </div>
+
+          </div>
+
+          <!-- ปุ่มค้นหาและปุ่มล้างค่า -->
+          <div class="flex flex-col sm:flex-row gap-3 pt-2">
+            <button onclick="executeUnitSearch()" 
+                    class="flex-1 bg-carrier hover:opacity-95 text-white font-semibold py-3.5 px-6 rounded-2xl transition flex items-center justify-center gap-2 shadow-sm active:scale-95 text-sm">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <span>ค้นหาข้อมูลเครื่อง</span>
+            </button>
+            <button onclick="resetUnitSearch()" 
+                    class="py-3.5 px-6 rounded-2xl border border-slate-300 text-slate-600 hover:bg-slate-50 font-medium text-sm transition flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-rotate-left text-xs"></i>
+              <span>ล้างช่องกรอก</span>
+            </button>
+          </div>
+
+          <!-- ตัวอย่างด่วนสำหรับทดสอบเครื่องแอร์ -->
+          <div class="mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+            <span class="font-medium text-slate-400"><i class="fa-solid fa-sparkles text-amber-500 mr-1"></i>คลิกทดสอบด่วน:</span>
+            <button onclick="quickSelectUnit('42TVAB010', '')" class="px-2.5 py-1 bg-blue-50 text-blue-900 hover:bg-blue-100 rounded-lg border border-blue-200 font-mono transition">รุ่น 42TVAB010 (X-Inverter Plus)</button>
+            <button onclick="quickSelectUnit('42TSAA012', '')" class="px-2.5 py-1 bg-blue-50 text-blue-900 hover:bg-blue-100 rounded-lg border border-blue-200 font-mono transition">รุ่น 42TSAA012 (Copper 11)</button>
+            <button onclick="quickSelectUnit('', 'SN-BCT2601001')" class="px-2.5 py-1 bg-indigo-50 text-indigo-900 hover:bg-indigo-100 rounded-lg border border-indigo-200 font-mono transition">S/N: SN-BCT2601001</button>
+            <button onclick="quickSelectUnit('', 'SN-BCT2601005')" class="px-2.5 py-1 bg-indigo-50 text-indigo-900 hover:bg-indigo-100 rounded-lg border border-indigo-200 font-mono transition">S/N: SN-BCT2601005</button>
+            <button onclick="quickSelectUnit('42TVDA010', 'SN-BCT2601007')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-mono transition">ค้นหาทั้ง 2 ช่อง</button>
+          </div>
+        </div>
+
+        <!-- ข้อมูลแนะนำเริ่มต้น Tab 2 (ซ่อนเมื่อเริ่มค้นหา) -->
+        <div id="unitInitialGuidance" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center py-2">
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+            <div class="w-12 h-12 mx-auto mb-3 bg-blue-50 text-carrier rounded-2xl flex items-center justify-center text-xl">
+              <i class="fa-solid fa-file-circle-check"></i>
+            </div>
+            <div class="font-bold text-slate-800 text-sm mb-1">ตรวจสอบ Sales Order (SO)</div>
+            <div class="text-xs text-slate-500 leading-relaxed">เช็กว่าเครื่องปรับอากาศออกด้วยเอกสาร SO หมายเลขใดจากคลังแคเรียร์</div>
+          </div>
+
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+            <div class="w-12 h-12 mx-auto mb-3 bg-indigo-50 text-indigo-700 rounded-2xl flex items-center justify-center text-xl">
+              <i class="fa-solid fa-shop"></i>
+            </div>
+            <div class="font-bold text-slate-800 text-sm mb-1">ตรวจสอบร้านค้า / ลูกค้าปลายทาง</div>
+            <div class="text-xs text-slate-500 leading-relaxed">ระบุชัดเจนว่าเครื่องดังกล่าวถูกจัดส่งไปยังร้านค้าหรือตัวแทนจำหน่ายใดในจังหวัดไหน</div>
+          </div>
+
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+            <div class="w-12 h-12 mx-auto mb-3 bg-emerald-50 text-emerald-700 rounded-2xl flex items-center justify-center text-xl">
+              <i class="fa-solid fa-truck-ramp-box"></i>
+            </div>
+            <div class="font-bold text-slate-800 text-sm mb-1">ตรวจสอบเลขพัสดุจัดส่ง</div>
+            <div class="text-xs text-slate-500 leading-relaxed">แสดงเลขพัสดุ (EMS / Flash / KEX) พร้อมกดลิงก์เช็กสถานะการเดินทางได้ทันที</div>
+          </div>
+        </div>
+
+        <!-- กล่องแจ้งเตือนเมื่อไม่พบข้อมูลเครื่อง Tab 2 -->
+        <div id="unitNotFoundBox" class="hidden bg-slate-100 border border-slate-200 p-6 md:p-8 rounded-3xl text-center space-y-2">
+          <i class="fa-solid fa-circle-question text-3xl text-slate-400"></i>
+          <div class="font-bold text-base text-slate-800">ไม่พบข้อมูลตามรุ่นหรือหมายเลขเครื่องที่ระบุ</div>
+          <p class="text-xs text-slate-500 max-w-md mx-auto">
+            กรุณาตรวจสอบความถูกต้องของรุ่นแอร์ (เช่น 42TVAB010) หรือหมายเลขเครื่อง (Serial No.) อีกครั้ง หรือติดต่อ Carrier Care 1454
+          </p>
+        </div>
+
+        <!-- ผลลัพธ์การค้นหาเครื่องปรับอากาศ Tab 2 -->
+        <div id="unitResultsSection" class="hidden space-y-6">
+
+          <!-- Highlight Unit Card -->
+          <div class="bg-white rounded-3xl p-6 md:p-8 border-2 border-indigo-100 shadow-sm relative overflow-hidden">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+              <div>
+                <div class="flex flex-wrap items-center gap-2 mb-2">
+                  <span class="px-3 py-1 text-xs font-bold rounded-full bg-indigo-50 text-indigo-900 border border-indigo-200 flex items-center gap-1.5">
+                    <i class="fa-solid fa-snowflake text-indigo-700"></i>
+                    <span id="unitCardSeries">Carrier Inverter</span>
+                  </span>
+                  <span class="text-xs text-slate-400">
+                    วันที่ออกใบคำสั่งซื้อ: <b class="text-slate-700 font-mono" id="unitCardDate">-</b>
+                  </span>
+                </div>
+
+                <h2 class="text-xl md:text-2xl font-extrabold text-slate-900 flex items-center gap-2">
+                  <span class="text-carrier" id="unitCardModel">-</span>
+                  <span class="text-slate-300 font-light">/</span>
+                  <span class="font-mono text-base md:text-lg text-slate-600 font-semibold" id="unitCardSerial">-</span>
+                </h2>
+                <p class="text-xs md:text-sm text-slate-500 mt-1.5 flex flex-wrap items-center gap-3">
+                  <span><i class="fa-solid fa-store text-carrier mr-1"></i>ลูกค้า/ร้านค้า: <b class="text-slate-800 font-semibold" id="unitCardShipTo">-</b></span>
+                  <span class="text-slate-300">|</span>
+                  <span><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i>จังหวัด: <b class="text-slate-700" id="unitCardProvince">-</b></span>
+                </p>
+              </div>
+
+              <!-- รายละเอียด SO และ พัสดุ -->
+              <div class="flex flex-wrap items-center gap-3">
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3">
+                  <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">ออกด้วยเลขที่ Sales Order</div>
+                  <div class="font-mono text-base font-bold text-carrier" id="unitCardSO">-</div>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center gap-2">
+                  <div>
+                    <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                      เลขพัสดุ (<span id="unitCardCarrier">-</span>)
+                    </div>
+                    <div class="font-mono text-base font-bold text-slate-900" id="unitCardTracking">-</div>
+                  </div>
+                  <button id="unitCardExtBtn" onclick="" class="ml-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-carrier shadow-xs hover:opacity-90 transition">
+                    ตรวจพัสดุ <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- กล่องสรุปสถานะการกระจายสินค้า -->
+            <div class="pt-5 grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+              <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                <span class="text-slate-400 block text-[11px]">สถานะการจำหน่าย</span>
+                <span class="font-bold text-emerald-700 flex items-center gap-1 mt-0.5">
+                  <i class="fa-solid fa-check-circle text-emerald-600"></i> ส่งมอบให้ร้านค้าแล้ว
+                </span>
+              </div>
+              <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                <span class="text-slate-400 block text-[11px]">คลังสินค้าต้นทาง</span>
+                <span class="font-semibold text-slate-800 block mt-0.5" id="unitCardWarehouse">SCG-JWD-BKD</span>
+              </div>
+              <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                <span class="text-slate-400 block text-[11px]">การรับประกันตัวเครื่อง</span>
+                <span class="font-semibold text-slate-800 block mt-0.5">รับประกันคอมเพรสเซอร์ 10 ปี</span>
+              </div>
+              <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                <span class="text-slate-400 block text-[11px]">ผู้แทนจำหน่ายทางการ</span>
+                <span class="font-semibold text-blue-900 block mt-0.5">Carrier Authorized Dealer</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Unit Table Section -->
+          <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <div class="flex items-center space-x-2">
+                  <h2 class="font-bold text-slate-900 text-base">รายการเครื่องที่พบในระบบ</h2>
+                  <span class="text-xs bg-indigo-50 text-indigo-900 border border-indigo-200 px-2.5 py-0.5 rounded-full font-semibold" id="unitMatchCount">0 เครื่อง</span>
+                </div>
+                <p class="text-slate-400 text-xs mt-0.5">คลิกแถวเพื่อดูรายละเอียดบนการ์ดด้านบน</p>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs md:text-sm text-slate-600">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-semibold text-[11px] tracking-wider border-b border-slate-100">
+                  <tr>
+                    <th class="py-3.5 px-4">รุ่นแอร์ (Model)</th>
+                    <th class="py-3.5 px-4">หมายเลขเครื่อง (Serial No)</th>
+                    <th class="py-3.5 px-4">ออกด้วย SO</th>
+                    <th class="py-3.5 px-4">ร้านค้า / ลูกค้า</th>
+                    <th class="py-3.5 px-4">จังหวัด</th>
+                    <th class="py-3.5 px-4">เลขพัสดุ (Tracking)</th>
+                    <th class="py-3.5 px-4 text-center">ดูข้อมูล</th>
+                  </tr>
+                </thead>
+                <tbody id="unitResultTableBody" class="divide-y divide-slate-100"></tbody>
+              </table>
             </div>
           </div>
 
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs md:text-sm text-slate-600">
-              <thead class="bg-slate-50 text-slate-500 uppercase font-semibold text-[11px] tracking-wider border-b border-slate-100">
-                <tr>
-                  <th class="py-3.5 px-4">วันที่</th>
-                  <th class="py-3.5 px-4">เลขที่ SO</th>
-                  <th class="py-3.5 px-4">ผู้รับ (SHIP TO)</th>
-                  <th class="py-3.5 px-4">จังหวัด</th>
-                  <th class="py-3.5 px-4">ขนส่ง</th>
-                  <th class="py-3.5 px-4">เลขพัสดุ</th>
-                  <th class="py-3.5 px-4 text-center">ดูสถานะ</th>
-                </tr>
-              </thead>
-              <tbody id="resultTableBody" class="divide-y divide-slate-100"></tbody>
-            </table>
-          </div>
         </div>
 
       </div>
@@ -421,7 +691,7 @@
             </svg>
           </div>
           <div>
-            <div class="font-bold text-slate-800 text-sm">Carrier Parts Tracking System</div>
+            <div class="font-bold text-slate-800 text-sm">Carrier Tracking & Unit Lookup System</div>
             <div>ผู้จัดทำ: <strong>B.GRIMM Carrier (Thailand) Limited</strong></div>
           </div>
         </div>
@@ -440,45 +710,43 @@
       { user: 'carrier', pass: '123456' }
     ];
 
-    const SHEET_ID = '1gqy5OnPiPwOVKrQgRDBSSQ8EkdCmqfCQmdH_m-ssQOY';
-    
-    // ชุดข้อมูลจำลองจริง 30+ รายการ ครบทั้ง SO, ไปรษณีย์ไทย, Flash Express และ KEX
-    const fallbackData = [
-      { date: "8-Jan-26", so: "SO-BCT-260000071", customer: "SCG-JWD-BKD", shipTo: "บริษัทมหานคร แอร์คอน", province: "กทม", carrier: "EMS", tracking: "ED794967911TH" },
-      { date: "8-Jan-26", so: "SO-BCT-260000140", customer: "SCG-JWD-BKD", shipTo: "บริษัทเอพีเอส เซอร์วิส", province: "กทม", carrier: "EMS", tracking: "ED794967664TH" },
-      { date: "8-Jan-26", so: "SO-BCT-260000144", customer: "SCG-JWD-BKD", shipTo: "บริษัทเอพีเอส เซอร์วิส", province: "กทม", carrier: "EMS", tracking: "ED794967678TH" },
-      { date: "8-Jan-26", so: "SO-BCT-260000145", customer: "SCG-JWD-BKD", shipTo: "บริษัทเอพีเอส เซอร์วิส", province: "กทม", carrier: "EMS", tracking: "ED794967593TH" },
-      { date: "8-Jan-26", so: "SO-BCT-260000158", customer: "SCG-JWD-BKD", shipTo: "บริษัท คูลเบย์ ซัพพลาย", province: "ชลบุรี", carrier: "EMS", tracking: "ED794967925TH" },
-      { date: "8-Jan-26", so: "SO-BCT-260000160", customer: "SCG-JWD-BKD", shipTo: "คุณณัฐพศุตม์ แอร์", province: "อยุธยา", carrier: "EMS", tracking: "ED794967797TH" },
-      { date: "8-Jan-26", so: "SO-BCT-260000150", customer: "SCG-JWD-BKD", shipTo: "คุณเพ็ญศรี เอ็นจิเนียริ่ง", province: "ภูเก็ต", carrier: "EMS", tracking: "ED794967602TH" },
-      { date: "8-Jan-26", so: "SO-BCT-260000213", customer: "SCG-JWD-BKD", shipTo: "บริษัท เอ พี เอส คูลลิ่ง", province: "กทม", carrier: "EMS", tracking: "ED794967695TH" },
-      { date: "8-Jan-26", so: "SO-BCT-260000209", customer: "SCG-JWD-BKD", shipTo: "คุณแมน การช่างแอร์", province: "สุโขทัย", carrier: "EMS", tracking: "ED794967973TH" },
-      { date: "8-Jan-26", so: "SO-BCT-260000212", customer: "SCG-JWD-BKD", shipTo: "บริษัท เค เค อิเล็คโทรนิคส์", province: "เพชรบุรี", carrier: "EMS", tracking: "ED794967939TH" },
-      { date: "8-Jan-26", so: "SO-BCT-260000226", customer: "SCG-JWD-BKD", shipTo: "ร้านดราก้อน แอร์", province: "อุดรธานี", carrier: "EMS", tracking: "ED794967854TH" },
-      { date: "9-Jan-26", so: "SO-BCT-260000502", customer: "SCG-JWD-BKD", shipTo: "บริษัท ทรัพย์อนันต์ ซัพพลาย", province: "ชลบุรี", carrier: "EMS", tracking: "ED794986408TH" },
-      { date: "10-Jan-26", so: "SO-BCT-260000615", customer: "SCG-JWD-BKD", shipTo: "หจก.โมเดิร์น แอร์กรุ๊ป", province: "ระยอง", carrier: "Flash Express", tracking: "TH0123456789A" },
-      { date: "11-Jan-26", so: "SO-BCT-260000720", customer: "SCG-JWD-BKD", shipTo: "ร้านสยาม แอร์ คูล", province: "ขอนแก่น", carrier: "Flash Express", tracking: "TH0298765432B" },
-      { date: "12-Jan-26", so: "SO-BCT-260000780", customer: "SCG-JWD-BKD", shipTo: "เอ็นพี คูลลิ่ง เซ็นเตอร์", province: "นครราชสีมา", carrier: "KEX", tracking: "KEX99887766TH" },
-      { date: "13-Jan-26", so: "SO-BCT-260000830", customer: "SCG-JWD-BKD", shipTo: "นายนพดล ช่างแอร์", province: "ปราจีนบุรี", carrier: "EMS", tracking: "ED860012246TH" },
-      { date: "14-Jan-26", so: "SO-BCT-260001707", customer: "SCG-JWD-BKD", shipTo: "เคพีออลล์ แอนด์ เซอร์วิส", province: "ชัยนาท", carrier: "EMS", tracking: "ED860013405TH" },
-      { date: "15-Jan-26", so: "SO-BCT-260002006", customer: "SCG-JWD-BKD", shipTo: "คุณศศิประภา พาร์ท", province: "ชลบุรี", carrier: "EMS", tracking: "ED794989537TH" },
-      { date: "16-Jan-26", so: "SO-BCT-260002225", customer: "SCG-JWD-BKD", shipTo: "หจก.อาร์ทคูลเซอร์วิส", province: "เชียงใหม่", carrier: "EMS", tracking: "ED860015083TH" },
-      { date: "17-Jan-26", so: "SO-BCT-260002300", customer: "SCG-JWD-BKD", shipTo: "ร้านเจริญ แอร์ แอนด์ ซาวด์", province: "พิษณุโลก", carrier: "Flash Express", tracking: "TH0311223344C" },
-      { date: "18-Jan-26", so: "SO-BCT-260002410", customer: "SCG-JWD-BKD", shipTo: "บจก.ทีพีเอส แอร์ซิสเต็มส์", province: "สมุทรปราการ", carrier: "KEX", tracking: "KEX11223344TH" },
-      { date: "19-Jan-26", so: "SO-BCT-260002446", customer: "SCG-JWD-BKD", shipTo: "บริษัทเคเค อะไหล่แอร์", province: "เพชรบุรี", carrier: "EMS", tracking: "ED860007904TH" },
-      { date: "20-Jan-26", so: "SO-BCT-260002703", customer: "SCG-JWD-BKD", shipTo: "คุณชวลิต แอร์เอ็กซ์เพรส", province: "สกลนคร", carrier: "EMS", tracking: "ED860024686TH" },
-      { date: "21-Jan-26", so: "SO-BCT-260002979", customer: "SCG-JWD-BKD", shipTo: "เจ เค ภูเก็ต เซอร์วิส", province: "ภูเก็ต", carrier: "EMS", tracking: "ED860018840TH" },
-      { date: "22-Jan-26", so: "SO-BCT-260003225", customer: "SCG-JWD-BKD", shipTo: "ร้านสมพงษ์แอร์ อยุธยา", province: "อยุธยา", carrier: "EMS", tracking: "ED860026656TH" },
-      { date: "23-Jan-26", so: "SO-BCT-260003510", customer: "SCG-JWD-BKD", shipTo: "คุณกรองแก้ว เอ็นจิเนียริ่ง", province: "นนทบุรี", carrier: "EMS", tracking: "ED860041707TH" },
-      { date: "24-Jan-26", so: "SO-BCT-260003620", customer: "SCG-JWD-BKD", shipTo: "บริษัท แอร์โปร อินเตอร์", province: "สงขลา", carrier: "Flash Express", tracking: "TH0455667788D" },
-      { date: "25-Jan-26", so: "SO-BCT-260003710", customer: "SCG-JWD-BKD", shipTo: "ชัยชนะ แอร์ ซัพพลาย", province: "นครศรีธรรมราช", carrier: "KEX", tracking: "KEX55667788TH" },
-      { date: "26-Jan-26", so: "SO-BCT-260003850", customer: "SCG-JWD-BKD", shipTo: "สหการ แอร์ เซ็นเตอร์", province: "สระบุรี", carrier: "EMS", tracking: "ED860052341TH" },
-      { date: "27-Jan-26", so: "SO-BCT-260003990", customer: "SCG-JWD-BKD", shipTo: "อุดมสุข คูลลิ่ง อะไหล่", province: "กทม", carrier: "EMS", tracking: "ED860064512TH" }
-    ];
+    // ฟังก์ชันจัดการการเข้าสู่ระบบ (Login Handler)
+    function handleLogin(e) {
+      if (e) e.preventDefault();
+      const u = (document.getElementById('usernameInput')?.value || '').trim().toLowerCase();
+      const p = (document.getElementById('passwordInput')?.value || '').trim();
+      const errBox = document.getElementById('loginError');
 
-    let allRecords = [...fallbackData];
+      const match = VALID_ACCOUNTS.find(acc => acc.user.toLowerCase() === u && acc.pass === p);
 
-    // ตรวจสอบสถานะการเข้าสู่ระบบ
+      if (match) {
+        sessionStorage.setItem('carrier_auth', 'true');
+        if (errBox) errBox.classList.add('hidden');
+        showMainApp();
+      } else {
+        if (errBox) {
+          errBox.classList.remove('hidden');
+          errBox.classList.remove('animate-shake');
+          void errBox.offsetWidth; // บังคับ trigger reflow ให้ animation เล่นซ้ำ
+          errBox.classList.add('animate-shake');
+        }
+      }
+    }
+
+    // ฟังก์ชันเปิด/ปิดการแสดงรหัสผ่าน
+    function togglePasswordVisibility() {
+      const passInput = document.getElementById('passwordInput');
+      const eyeIcon = document.getElementById('eyeIcon');
+      if (passInput.type === 'password') {
+        passInput.type = 'text';
+        eyeIcon.className = 'fa-solid fa-eye-slash text-sm';
+      } else {
+        passInput.type = 'password';
+        eyeIcon.className = 'fa-solid fa-eye text-sm';
+      }
+    }
+
+    // ตรวจสอบสถานะการเข้าสู่ระบบเมื่อโหลดหน้าเว็บ
     window.addEventListener('DOMContentLoaded', () => {
       const isAuth = sessionStorage.getItem('carrier_auth');
       if (isAuth === 'true') {
@@ -486,21 +754,165 @@
       }
     });
 
-    function handleLogin(e) {
-      e.preventDefault();
-      const u = document.getElementById('usernameInput').value.trim();
-      const p = document.getElementById('passwordInput').value.trim();
-      const errBox = document.getElementById('loginError');
+    const SHEET_ID = '1gqy5OnPiPwOVKrQgRDBSSQ8EkdCmqfCQmdH_m-ssQOY';
+    
+    // ชุดข้อมูลจำลองจริง 30+ รายการ พร้อมผูก Model และ Serial Number สำหรับเครื่องปรับอากาศ Carrier
+    const fallbackData = [
+      { date: "8-Jan-26", so: "SO-BCT-260000071", customer: "SCG-JWD-BKD", shipTo: "บริษัทมหานคร แอร์คอน", province: "กทม", carrier: "EMS", tracking: "ED794967911TH", model: "42TVAB010", serial: "SN-BCT2601001", series: "X-Inverter Plus" },
+      { date: "8-Jan-26", so: "SO-BCT-260000140", customer: "SCG-JWD-BKD", shipTo: "บริษัทเอพีเอส เซอร์วิส", province: "กทม", carrier: "EMS", tracking: "ED794967664TH", model: "42TVAB013", serial: "SN-BCT2601002", series: "X-Inverter Plus" },
+      { date: "8-Jan-26", so: "SO-BCT-260000144", customer: "SCG-JWD-BKD", shipTo: "บริษัทเอพีเอส เซอร์วิส", province: "กทม", carrier: "EMS", tracking: "ED794967678TH", model: "42TSAA010", serial: "SN-BCT2601003", series: "Copper 11" },
+      { date: "8-Jan-26", so: "SO-BCT-260000145", customer: "SCG-JWD-BKD", shipTo: "บริษัทเอพีเอส เซอร์วิส", province: "กทม", carrier: "EMS", tracking: "ED794967593TH", model: "42TSAA012", serial: "SN-BCT2601004", series: "Copper 11" },
+      { date: "8-Jan-26", so: "SO-BCT-260000158", customer: "SCG-JWD-BKD", shipTo: "บริษัท คูลเบย์ ซัพพลาย", province: "ชลบุรี", carrier: "EMS", tracking: "ED794967925TH", model: "42TVAB018", serial: "SN-BCT2601005", series: "X-Inverter Plus" },
+      { date: "8-Jan-26", so: "SO-BCT-260000160", customer: "SCG-JWD-BKD", shipTo: "คุณณัฐพศุตม์ แอร์", province: "อยุธยา", carrier: "EMS", tracking: "ED794967797TH", model: "42TSAA018", serial: "SN-BCT2601006", series: "Copper 11" },
+      { date: "8-Jan-26", so: "SO-BCT-260000150", customer: "SCG-JWD-BKD", shipTo: "คุณเพ็ญศรี เอ็นจิเนียริ่ง", province: "ภูเก็ต", carrier: "EMS", tracking: "ED794967602TH", model: "42TVDA010", serial: "SN-BCT2601007", series: "Ion-Inverter" },
+      { date: "8-Jan-26", so: "SO-BCT-260000213", customer: "SCG-JWD-BKD", shipTo: "บริษัท เอ พี เอส คูลลิ่ง", province: "กทม", carrier: "EMS", tracking: "ED794967695TH", model: "42TVAB024", serial: "SN-BCT2601008", series: "X-Inverter Plus" },
+      { date: "8-Jan-26", so: "SO-BCT-260000209", customer: "SCG-JWD-BKD", shipTo: "คุณแมน การช่างแอร์", province: "สุโขทัย", carrier: "EMS", tracking: "ED794967973TH", model: "42TSAA024", serial: "SN-BCT2601009", series: "Copper 11" },
+      { date: "8-Jan-26", so: "SO-BCT-260000212", customer: "SCG-JWD-BKD", shipTo: "บริษัท เค เค อิเล็คโทรนิคส์", province: "เพชรบุรี", carrier: "EMS", tracking: "ED794967939TH", model: "42TVDA013", serial: "SN-BCT2601010", series: "Ion-Inverter" },
+      { date: "8-Jan-26", so: "SO-BCT-260000226", customer: "SCG-JWD-BKD", shipTo: "ร้านดราก้อน แอร์", province: "อุดรธานี", carrier: "EMS", tracking: "ED794967854TH", model: "42TVAB010", serial: "SN-BCT2601011", series: "X-Inverter Plus" },
+      { date: "9-Jan-26", so: "SO-BCT-260000502", customer: "SCG-JWD-BKD", shipTo: "บริษัท ทรัพย์อนันต์ ซัพพลาย", province: "ชลบุรี", carrier: "EMS", tracking: "ED794986408TH", model: "42TSAA012", serial: "SN-BCT2601012", series: "Copper 11" },
+      { date: "10-Jan-26", so: "SO-BCT-260000615", customer: "SCG-JWD-BKD", shipTo: "หจก.โมเดิร์น แอร์กรุ๊ป", province: "ระยอง", carrier: "Flash Express", tracking: "TH0123456789A", model: "42TVAB013", serial: "SN-BCT2601013", series: "X-Inverter Plus" },
+      { date: "11-Jan-26", so: "SO-BCT-260000720", customer: "SCG-JWD-BKD", shipTo: "ร้านสยาม แอร์ คูล", province: "ขอนแก่น", carrier: "Flash Express", tracking: "TH0298765432B", model: "42TVDA018", serial: "SN-BCT2601014", series: "Ion-Inverter" },
+      { date: "12-Jan-26", so: "SO-BCT-260000780", customer: "SCG-JWD-BKD", shipTo: "เอ็นพี คูลลิ่ง เซ็นเตอร์", province: "นครราชสีมา", carrier: "KEX", tracking: "KEX99887766TH", model: "42TSAA018", serial: "SN-BCT2601015", series: "Copper 11" },
+      { date: "13-Jan-26", so: "SO-BCT-260000830", customer: "SCG-JWD-BKD", shipTo: "นายนพดล ช่างแอร์", province: "ปราจีนบุรี", carrier: "J&T Express", tracking: "JNT66778899TH", model: "42TVAB028", serial: "SN-BCT2601016", series: "X-Inverter Plus" },
+      { date: "14-Jan-26", so: "SO-BCT-260001707", customer: "SCG-JWD-BKD", shipTo: "เคพีออลล์ แอนด์ เซอร์วิส", province: "ชัยนาท", carrier: "Nim Express", tracking: "NIM11223344TH", model: "42TSAA010", serial: "SN-BCT2601017", series: "Copper 11" },
+      { date: "15-Jan-26", so: "SO-BCT-260002006", customer: "SCG-JWD-BKD", shipTo: "คุณศศิประภา พาร์ท", province: "ชลบุรี", carrier: "EMS", tracking: "ED794989537TH", model: "42TVDA024", serial: "SN-BCT2601018", series: "Ion-Inverter" },
+      { date: "16-Jan-26", so: "SO-BCT-260002225", customer: "SCG-JWD-BKD", shipTo: "หจก.อาร์ทคูลเซอร์วิส", province: "เชียงใหม่", carrier: "EMS", tracking: "ED860015083TH", model: "42TVAB018", serial: "SN-BCT2601019", series: "X-Inverter Plus" },
+      { date: "17-Jan-26", so: "SO-BCT-260002300", customer: "SCG-JWD-BKD", shipTo: "ร้านเจริญ แอร์ แอนด์ ซาวด์", province: "พิษณุโลก", carrier: "Flash Express", tracking: "TH0311223344C", model: "42TSAA012", serial: "SN-BCT2601020", series: "Copper 11" },
+      { date: "18-Jan-26", so: "SO-BCT-260002410", customer: "SCG-JWD-BKD", shipTo: "บจก.ทีพีเอส แอร์ซิสเต็มส์", province: "สมุทรปราการ", carrier: "KEX", tracking: "KEX11223344TH", model: "42TVAB010", serial: "SN-BCT2601021", series: "X-Inverter Plus" },
+      { date: "19-Jan-26", so: "SO-BCT-260002446", customer: "SCG-JWD-BKD", shipTo: "บริษัทเคเค อะไหล่แอร์", province: "เพชรบุรี", carrier: "J&T Express", tracking: "JNT88990011TH", model: "42TSAA024", serial: "SN-BCT2601022", series: "Copper 11" },
+      { date: "20-Jan-26", so: "SO-BCT-260002703", customer: "SCG-JWD-BKD", shipTo: "คุณชวลิต แอร์เอ็กซ์เพรส", province: "สกลนคร", carrier: "Nim Express", tracking: "NIM55667788TH", model: "42TVDA013", serial: "SN-BCT2601023", series: "Ion-Inverter" },
+      { date: "21-Jan-26", so: "SO-BCT-260002979", customer: "SCG-JWD-BKD", shipTo: "เจ เค ภูเก็ต เซอร์วิส", province: "ภูเก็ต", carrier: "EMS", tracking: "ED860018840TH", model: "42TVAB024", serial: "SN-BCT2601024", series: "X-Inverter Plus" },
+      { date: "22-Jan-26", so: "SO-BCT-260003225", customer: "SCG-JWD-BKD", shipTo: "ร้านสมพงษ์แอร์ อยุธยา", province: "อยุธยา", carrier: "EMS", tracking: "ED860026656TH", model: "42TSAA018", serial: "SN-BCT2601025", series: "Copper 11" },
+      { date: "23-Jan-26", so: "SO-BCT-260003510", customer: "SCG-JWD-BKD", shipTo: "คุณกรองแก้ว เอ็นจิเนียริ่ง", province: "นนทบุรี", carrier: "EMS", tracking: "ED860041707TH", model: "42TVDA010", serial: "SN-BCT2601026", series: "Ion-Inverter" },
+      { date: "24-Jan-26", so: "SO-BCT-260003620", customer: "SCG-JWD-BKD", shipTo: "บริษัท แอร์โปร อินเตอร์", province: "สงขลา", carrier: "Flash Express", tracking: "TH0455667788D", model: "42TVAB013", serial: "SN-BCT2601027", series: "X-Inverter Plus" },
+      { date: "25-Jan-26", so: "SO-BCT-260003710", customer: "SCG-JWD-BKD", shipTo: "ชัยชนะ แอร์ ซัพพลาย", province: "นครศรีธรรมราช", carrier: "KEX", tracking: "KEX55667788TH", model: "42TSAA010", serial: "SN-BCT2601028", series: "Copper 11" },
+      { date: "26-Jan-26", so: "SO-BCT-260003850", customer: "SCG-JWD-BKD", shipTo: "สหการ แอร์ เซ็นเตอร์", province: "สระบุรี", carrier: "EMS", tracking: "ED860052341TH", model: "42TVAB028", serial: "SN-BCT2601029", series: "X-Inverter Plus" },
+      { date: "27-Jan-26", so: "SO-BCT-260003990", customer: "SCG-JWD-BKD", shipTo: "อุดมสุข คูลลิ่ง อะไหล่", province: "กทม", carrier: "Nim Express", tracking: "NIM99001122TH", model: "42TSAA012", serial: "SN-BCT2601030", series: "Copper 11" }
+    ];
 
-      const match = VALID_ACCOUNTS.find(acc => acc.user.toLowerCase() === u.toLowerCase() && acc.pass === p);
+    let allRecords = [...fallbackData];
 
-      if (match) {
-        sessionStorage.setItem('carrier_auth', 'true');
-        errBox.classList.add('hidden');
-        showMainApp();
+    // ================= ฟังก์ชันสลับแท็บ =================
+    function switchMainTab(tab) {
+      const btnParts = document.getElementById('tabBtnParts');
+      const btnUnit = document.getElementById('tabBtnUnit');
+      const contentParts = document.getElementById('tabContentParts');
+      const contentUnit = document.getElementById('tabContentUnit');
+
+      if (tab === 'parts') {
+        btnParts.className = "flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-bold transition-all flex items-center justify-center gap-2 bg-white text-carrier shadow-sm";
+        btnUnit.className = "flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900";
+        contentParts.classList.remove('hidden');
+        contentUnit.classList.add('hidden');
+        setTimeout(() => document.getElementById('searchInput')?.focus(), 150);
       } else {
-        errBox.classList.remove('hidden');
+        btnUnit.className = "flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-bold transition-all flex items-center justify-center gap-2 bg-white text-indigo-900 shadow-sm";
+        btnParts.className = "flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900";
+        contentUnit.classList.remove('hidden');
+        contentParts.classList.add('hidden');
+        setTimeout(() => document.getElementById('unitModelInput')?.focus(), 150);
       }
+    }
+
+    // ================= ฟังก์ชันค้นหาแท็บที่ 2: รุ่น & หมายเลขเครื่องแอร์ =================
+    function executeUnitSearch() {
+      const modelQ = (document.getElementById('unitModelInput')?.value || '').trim().toLowerCase();
+      const serialQ = (document.getElementById('unitSerialInput')?.value || '').trim().toLowerCase();
+      const guidance = document.getElementById('unitInitialGuidance');
+      const resultsSection = document.getElementById('unitResultsSection');
+      const notFoundBox = document.getElementById('unitNotFoundBox');
+
+      if (!modelQ && !serialQ) {
+        resetUnitSearch();
+        return;
+      }
+
+      // ค้นหาแบบกรองด้วยรุ่น, หมายเลขเครื่อง หรือทั้งสองช่องคู่กัน
+      const matches = allRecords.filter(item => {
+        const itemModel = (item.model || '').toLowerCase();
+        const itemSerial = (item.serial || '').toLowerCase();
+
+        if (modelQ && serialQ) {
+          return itemModel.includes(modelQ) && itemSerial.includes(serialQ);
+        } else if (modelQ) {
+          return itemModel.includes(modelQ);
+        } else if (serialQ) {
+          return itemSerial.includes(serialQ);
+        }
+        return false;
+      });
+
+      guidance.classList.add('hidden');
+
+      if (matches.length > 0) {
+        notFoundBox.classList.add('hidden');
+        resultsSection.classList.remove('hidden');
+        renderUnitCard(matches[0]);
+
+        document.getElementById('unitMatchCount').innerText = `${matches.length} เครื่อง`;
+        const tbody = document.getElementById('unitResultTableBody');
+        tbody.innerHTML = matches.map(item => `
+          <tr class="hover:bg-indigo-50/50 transition cursor-pointer group" onclick="renderUnitCardBySerial('${item.serial}')">
+            <td class="py-3.5 px-4 font-bold text-carrier font-mono">${item.model || '-'}</td>
+            <td class="py-3.5 px-4 font-mono font-semibold text-slate-900 group-hover:text-indigo-600">${item.serial || '-'}</td>
+            <td class="py-3.5 px-4 font-mono text-slate-700">${item.so || '-'}</td>
+            <td class="py-3.5 px-4 font-medium text-slate-800">${item.shipTo || '-'}</td>
+            <td class="py-3.5 px-4 text-slate-600">${item.province || '-'}</td>
+            <td class="py-3.5 px-4 font-mono text-slate-700">${item.tracking || '-'}</td>
+            <td class="py-3.5 px-4 text-center">
+              <button onclick="event.stopPropagation(); renderUnitCardBySerial('${item.serial}')" 
+                      class="px-3 py-1 bg-slate-100 group-hover:bg-indigo-700 group-hover:text-white rounded-lg text-xs font-medium transition shadow-xs">
+                ดูข้อมูล
+              </button>
+            </td>
+          </tr>
+        `).join('');
+
+        window.scrollTo({ top: 300, behavior: 'smooth' });
+      } else {
+        resultsSection.classList.add('hidden');
+        notFoundBox.classList.remove('hidden');
+      }
+    }
+
+    function renderUnitCard(item) {
+      document.getElementById('unitCardModel').innerText = item.model || 'Carrier Unit';
+      document.getElementById('unitCardSerial').innerText = `S/N: ${item.serial || '-'}`;
+      document.getElementById('unitCardSeries').innerText = item.series || 'Carrier Inverter Series';
+      document.getElementById('unitCardDate').innerText = item.date || '-';
+      document.getElementById('unitCardShipTo').innerText = item.shipTo || '-';
+      document.getElementById('unitCardProvince').innerText = item.province || '-';
+      document.getElementById('unitCardSO').innerText = item.so || '-';
+      document.getElementById('unitCardTracking').innerText = item.tracking || '-';
+      document.getElementById('unitCardCarrier').innerText = item.carrier || 'EMS';
+      document.getElementById('unitCardWarehouse').innerText = item.customer || 'SCG-JWD-BKD';
+
+      const type = getCarrierType(item.carrier, item.tracking);
+      const extBtn = document.getElementById('unitCardExtBtn');
+      extBtn.onclick = () => openExternalTracking(type, item.tracking);
+    }
+
+    function renderUnitCardBySerial(serial) {
+      const item = allRecords.find(r => r.serial === serial);
+      if (item) {
+        renderUnitCard(item);
+        window.scrollTo({ top: 300, behavior: 'smooth' });
+      }
+    }
+
+    function quickSelectUnit(model, serial) {
+      document.getElementById('unitModelInput').value = model;
+      document.getElementById('unitSerialInput').value = serial;
+      executeUnitSearch();
+    }
+
+    function resetUnitSearch() {
+      document.getElementById('unitModelInput').value = '';
+      document.getElementById('unitSerialInput').value = '';
+      document.getElementById('unitInitialGuidance').classList.remove('hidden');
+      document.getElementById('unitResultsSection').classList.add('hidden');
+      document.getElementById('unitNotFoundBox').classList.add('hidden');
+      document.getElementById('unitModelInput').focus();
     }
 
     function handleLogout() {
@@ -519,7 +931,29 @@
       setTimeout(() => document.getElementById('searchInput').focus(), 300);
     }
 
-    // ซิงค์ข้อมูลสดจาก Google Sheets
+    // สลับแท็บโหมด (Tab 1: ติดตามพัสดุ / Tab 2: เช็กรุ่นและเครื่องแอร์)
+    function switchTab(mode) {
+      const tabBtnTracking = document.getElementById('tabBtnTracking');
+      const tabBtnUnit = document.getElementById('tabBtnUnit');
+      const contentTracking = document.getElementById('tabContentTracking');
+      const contentUnit = document.getElementById('tabContentUnit');
+
+      if (mode === 'TRACKING') {
+        tabBtnTracking.className = "flex-1 py-2.5 px-4 rounded-xl text-xs md:text-sm font-bold transition flex items-center justify-center space-x-2 bg-white text-carrier shadow-sm";
+        tabBtnUnit.className = "flex-1 py-2.5 px-4 rounded-xl text-xs md:text-sm font-semibold transition flex items-center justify-center space-x-2 text-slate-600 hover:text-slate-900";
+        contentTracking.classList.remove('hidden');
+        contentUnit.classList.add('hidden');
+        setTimeout(() => document.getElementById('searchInput').focus(), 150);
+      } else {
+        tabBtnUnit.className = "flex-1 py-2.5 px-4 rounded-xl text-xs md:text-sm font-bold transition flex items-center justify-center space-x-2 bg-white text-carrier shadow-sm";
+        tabBtnTracking.className = "flex-1 py-2.5 px-4 rounded-xl text-xs md:text-sm font-semibold transition flex items-center justify-center space-x-2 text-slate-600 hover:text-slate-900";
+        contentUnit.classList.remove('hidden');
+        contentTracking.classList.add('hidden');
+        setTimeout(() => document.getElementById('unitSearchInput').focus(), 150);
+      }
+    }
+
+    // ดึงข้อมูลเรียลไทม์จาก Google Sheets
     async function loadDataFromSheet() {
       const gvizUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&tq=select%20*`;
       try {
@@ -535,7 +969,10 @@
           shipTo: r.c[3] ? r.c[3].v : '',
           province: r.c[4] ? r.c[4].v : '',
           carrier: r.c[5] ? r.c[5].v : 'EMS',
-          tracking: r.c[6] ? r.c[6].v : ''
+          tracking: r.c[6] ? r.c[6].v : '',
+          model: r.c[7] ? r.c[7].v : '42TVAB010',
+          serial: r.c[8] ? r.c[8].v : `SN-BCT${r.c[1] ? r.c[1].v.slice(-5) : '1001'}`,
+          series: 'Carrier Inverter Plus'
         })).filter(item => item.tracking || item.so);
 
         if (liveData.length > 0) {
@@ -543,7 +980,7 @@
           updateSyncStatus(true, allRecords.length, false);
         }
       } catch (err) {
-        console.warn("Using offline fallback data:", err);
+        console.warn("Using fallback local data:", err);
         updateSyncStatus(true, allRecords.length, true);
       }
     }
@@ -560,11 +997,11 @@
       }
     }
 
-    // ฟังก์ชันส่งไปยังเว็บขนส่งโดยตรง
+    // ================= โลจิกแท็บ 1: ติดตามสถานะขนส่งอะไหล่ =================
     function openExternalTracking(carrierType, customNum = null) {
       let trackNum = (customNum || document.getElementById('searchInput').value).trim();
       if (!trackNum) {
-        const cardTrack = document.getElementById('cardTracking').innerText;
+        const cardTrack = document.getElementById('cardTracking')?.innerText;
         if (cardTrack && cardTrack !== '-') trackNum = cardTrack;
       }
 
@@ -575,12 +1012,15 @@
         url = trackNum ? `https://www.flashexpress.co.th/tracking/?se=${encodeURIComponent(trackNum)}` : 'https://www.flashexpress.co.th/tracking/';
       } else if (carrierType === 'KEX') {
         url = trackNum ? `https://th.kexpress.com/th/track/?track=${encodeURIComponent(trackNum)}` : 'https://th.kexpress.com/th/track/';
+      } else if (carrierType === 'JNT') {
+        url = trackNum ? `https://www.jtexpress.co.th/service/track?bills=${encodeURIComponent(trackNum)}` : 'https://www.jtexpress.co.th/service/track';
+      } else if (carrierType === 'NIM') {
+        url = trackNum ? `https://www.nimexpress.com/web/p/tracking?i=${encodeURIComponent(trackNum)}` : 'https://www.nimexpress.com/web/p/tracking';
       }
 
       if (url) window.open(url, '_blank');
     }
 
-    // ฟังก์ชันตรวจจับเลขพัสดุอัตโนมัติขณะพิมพ์ (Auto-Detect)
     function detectCarrierTracking() {
       const val = document.getElementById('searchInput').value.trim().toUpperCase();
       const banner = document.getElementById('carrierDetectBanner');
@@ -589,16 +1029,22 @@
       const detectActionBtn = document.getElementById('detectActionBtn');
       const detectIcon = document.getElementById('detectIcon');
 
-      const isThPost = /^[A-Z]{2}[0-9]{9}[A-Z]{2}$/.test(val) || (val.length === 13 && val.endsWith('TH'));
+      const isThPost = /^[A-Z]{2}[0-9]{9}[A-Z]{2}$/.test(val) || (val.length === 13 && val.endsWith('TH') && !val.startsWith('JNT') && !val.startsWith('NIM') && !val.startsWith('KEX'));
       const isFlash = /^TH[0-9A-Z]{10,13}$/.test(val) || val.startsWith('TH');
       const isKex = /^KEX[0-9A-Z]+$/.test(val) || /^KER[0-9A-Z]+$/.test(val) || /^SHP[0-9A-Z]+$/.test(val);
+      const isJnt = /^JNT[0-9A-Z]+$/.test(val) || (/^8[0-9]{11}$/.test(val)) || (/^[0-9]{12}$/.test(val));
+      const isNim = /^NIM[0-9A-Z]+$/.test(val) || (/^[0-9]{9,10}$/.test(val));
 
       if (isThPost) {
         showBanner('ไปรษณีย์ไทย (EMS)', val, 'THPOST', 'bg-red-50 text-red-800 border-red-200', 'fa-truck text-red-600');
       } else if (isFlash && val.length >= 8) {
         showBanner('Flash Express', val, 'FLASH', 'bg-amber-50 text-amber-900 border-amber-200', 'fa-bolt text-amber-600');
-      } else if (isKex && val.length >= 8) {
+      } else if (isKex && val.length >= 6) {
         showBanner('KEX (Kerry Express)', val, 'KEX', 'bg-orange-50 text-orange-900 border-orange-200', 'fa-box text-orange-600');
+      } else if (isJnt && val.length >= 6) {
+        showBanner('J&T Express', val, 'JNT', 'bg-rose-50 text-rose-900 border-rose-200', 'fa-truck-fast text-rose-600');
+      } else if (isNim && val.length >= 6) {
+        showBanner('Nim Express', val, 'NIM', 'bg-sky-50 text-sky-900 border-sky-200', 'fa-dolly text-sky-600');
       } else {
         banner.classList.add('hidden');
       }
@@ -613,7 +1059,6 @@
       }
     }
 
-    // ทำการค้นหาข้อมูลในระบบ
     function executeSearch() {
       const q = document.getElementById('searchInput').value.trim().toLowerCase();
       const guidance = document.getElementById('initialGuidance');
@@ -675,12 +1120,16 @@
       const t = (tracking || '').toUpperCase();
       if (c.includes('FLASH') || t.startsWith('TH')) return 'FLASH';
       if (c.includes('KEX') || c.includes('KERRY') || t.startsWith('KEX')) return 'KEX';
+      if (c.includes('J&T') || c.includes('JNT') || t.startsWith('JNT')) return 'JNT';
+      if (c.includes('NIM') || t.startsWith('NIM')) return 'NIM';
       return 'THPOST';
     }
 
     function getCarrierBadgeColor(type) {
       if (type === 'FLASH') return 'bg-amber-100 text-amber-900 border border-amber-200';
       if (type === 'KEX') return 'bg-orange-100 text-orange-900 border border-orange-200';
+      if (type === 'JNT') return 'bg-rose-100 text-rose-900 border border-rose-200';
+      if (type === 'NIM') return 'bg-sky-100 text-sky-900 border border-sky-200';
       return 'bg-blue-50 text-blue-900 border border-blue-200';
     }
 
@@ -703,6 +1152,12 @@
       } else if (type === 'KEX') {
         extBtn.className = "px-5 py-3 rounded-2xl text-xs md:text-sm font-semibold bg-kex hover-kex text-white shadow-sm transition flex items-center gap-2 active:scale-95";
         extBtnText.innerText = "เปิดเว็บ KEX (Kerry)";
+      } else if (type === 'JNT') {
+        extBtn.className = "px-5 py-3 rounded-2xl text-xs md:text-sm font-semibold bg-jnt hover-jnt text-white shadow-sm transition flex items-center gap-2 active:scale-95";
+        extBtnText.innerText = "เปิดเว็บ J&T Express";
+      } else if (type === 'NIM') {
+        extBtn.className = "px-5 py-3 rounded-2xl text-xs md:text-sm font-semibold bg-nim hover-nim text-white shadow-sm transition flex items-center gap-2 active:scale-95";
+        extBtnText.innerText = "เปิดเว็บ Nim Express";
       } else {
         extBtn.className = "px-5 py-3 rounded-2xl text-xs md:text-sm font-semibold bg-thpost hover-thpost text-white shadow-sm transition flex items-center gap-2 active:scale-95";
         extBtnText.innerText = "เปิดเว็บไปรษณีย์ไทย";
@@ -736,6 +1191,99 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // ================= โลจิกแท็บ 2: เช็กรุ่น & หมายเลขเครื่องแอร์ =================
+    function executeUnitSearch() {
+      const q = document.getElementById('unitSearchInput').value.trim().toLowerCase();
+      const guidance = document.getElementById('unitInitialGuidance');
+      const resultsSection = document.getElementById('unitResultsSection');
+      const notFoundBox = document.getElementById('unitNotFoundBox');
+      const btnClear = document.getElementById('btnUnitClear');
+
+      if (!q) {
+        resetUnitSearch();
+        return;
+      }
+
+      const matches = allRecords.filter(item => 
+        (item.model && item.model.toLowerCase().includes(q)) ||
+        (item.serial && item.serial.toLowerCase().includes(q)) ||
+        (item.so && item.so.toLowerCase().includes(q)) ||
+        (item.type && item.type.toLowerCase().includes(q))
+      );
+
+      guidance.classList.add('hidden');
+      btnClear.classList.remove('hidden');
+
+      if (matches.length > 0) {
+        notFoundBox.classList.add('hidden');
+        resultsSection.classList.remove('hidden');
+        renderUnitCard(matches[0]);
+
+        document.getElementById('unitMatchCount').innerText = `${matches.length} รายการ`;
+        const tbody = document.getElementById('unitTableBody');
+        tbody.innerHTML = matches.map(item => `
+          <tr class="hover:bg-blue-50/50 transition cursor-pointer group" onclick="renderUnitCardBySerial('${item.serial}')">
+            <td class="py-3.5 px-4 font-bold font-mono text-slate-900 group-hover:text-carrier">${item.model || '-'}</td>
+            <td class="py-3.5 px-4 font-mono font-semibold text-slate-700">${item.serial || '-'}</td>
+            <td class="py-3.5 px-4 font-mono text-blue-800">${item.so || '-'}</td>
+            <td class="py-3.5 px-4 font-medium text-slate-800">${item.shipTo || '-'}</td>
+            <td class="py-3.5 px-4 text-slate-600">${item.province || '-'}</td>
+            <td class="py-3.5 px-4 font-mono font-bold text-slate-900">${item.tracking || '-'}</td>
+            <td class="py-3.5 px-4 text-center">
+              <button onclick="event.stopPropagation(); renderUnitCardBySerial('${item.serial}')" class="px-3 py-1 bg-slate-100 group-hover:bg-carrier group-hover:text-white rounded-lg text-xs font-medium transition shadow-xs">
+                ดูรายละเอียด
+              </button>
+            </td>
+          </tr>
+        `).join('');
+
+        window.scrollTo({ top: 320, behavior: 'smooth' });
+      } else {
+        resultsSection.classList.add('hidden');
+        notFoundBox.classList.remove('hidden');
+      }
+    }
+
+    function renderUnitCard(item) {
+      document.getElementById('unitCardModel').innerText = item.model || 'Carrier Unit';
+      document.getElementById('unitCardSerial').innerText = `S/N: ${item.serial || '-'}`;
+      document.getElementById('unitCardSeries').innerText = item.series || 'Carrier Inverter Series';
+      document.getElementById('unitCardDate').innerText = item.date || '-';
+      document.getElementById('unitCardShipTo').innerText = item.shipTo || '-';
+      document.getElementById('unitCardProvince').innerText = item.province || '-';
+      document.getElementById('unitCardSO').innerText = item.so || '-';
+      document.getElementById('unitCardTracking').innerText = item.tracking || '-';
+      document.getElementById('unitCardCarrier').innerText = item.carrier || 'EMS';
+      document.getElementById('unitCardWarehouse').innerText = item.customer || 'SCG-JWD-BKD';
+
+      const type = getCarrierType(item.carrier, item.tracking);
+      const extBtn = document.getElementById('unitCardExtBtn');
+      extBtn.onclick = () => openExternalTracking(type, item.tracking);
+    }
+
+    function renderUnitCardBySerial(serial) {
+      const match = allRecords.find(item => item.serial === serial);
+      if (match) {
+        renderUnitCard(match);
+        window.scrollTo({ top: 320, behavior: 'smooth' });
+      }
+    }
+
+    function quickSelectUnit(val) {
+      document.getElementById('unitSearchInput').value = val;
+      executeUnitSearch();
+    }
+
+    function resetUnitSearch() {
+      document.getElementById('unitSearchInput').value = '';
+      document.getElementById('unitInitialGuidance').classList.remove('hidden');
+      document.getElementById('unitResultsSection').classList.add('hidden');
+      document.getElementById('unitNotFoundBox').classList.add('hidden');
+      document.getElementById('btnUnitClear').classList.add('hidden');
+      document.getElementById('unitSearchInput').focus();
+    }
+
+    // ฟังก์ชันเสริม
     function copyTrackingCode() {
       const tracking = document.getElementById('cardTracking').innerText;
       if (tracking && tracking !== '-') {
