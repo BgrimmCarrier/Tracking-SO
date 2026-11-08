@@ -164,19 +164,19 @@
       <!-- แถบสลับ 2 โหมดการใช้งาน (Tab Switcher) -->
       <div class="flex p-1.5 bg-slate-200/80 rounded-2xl max-w-2xl mx-auto shadow-inner">
         <button id="tabBtnParts" onclick="switchMainTab('parts')" 
-                class="flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-medium transition-all flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900">
+                class="flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-bold transition-all flex items-center justify-center gap-2 bg-white text-carrier shadow-sm">
           <i class="fa-solid fa-boxes-packing text-sm"></i>
           <span>ติดตามสถานะขนส่งอะไหล่</span>
         </button>
         <button id="tabBtnUnit" onclick="switchMainTab('unit')" 
-                class="flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-bold transition-all flex items-center justify-center gap-2 bg-white text-indigo-900 shadow-sm">
+                class="flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-medium transition-all flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900">
           <i class="fa-solid fa-snowflake text-sm"></i>
           <span>ตรวจสอบ รุ่น และ หมายเลขเครื่องปรับอากาศ</span>
         </button>
       </div>
 
       <!-- ================= TAB 1: ติดตามสถานะขนส่งอะไหล่ ================= -->
-      <div id="tabContentParts" class="space-y-8 hidden">
+      <div id="tabContentParts" class="space-y-7">
 
         <!-- Hero Section Tab 1 -->
         <div class="text-center">
@@ -184,17 +184,32 @@
             <i class="fa-solid fa-truck-fast text-carrier text-xs"></i>
             <span>ระบบตรวจสอบสถานะจัดส่งอะไหล่แท้ เครื่องปรับอากาศแคเรียร์</span>
           </div>
-          <h1 class="text-2xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-2">ติดตามสถานะจัดส่งอะไหล่ แคเรียร์</h1>
-          <p class="text-slate-500 text-sm md:text-base max-w-xl mx-auto">
+          <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">ติดตามสถานะจัดส่งอะไหล่ แคเรียร์</h1>
+          <p class="text-slate-500 text-xs md:text-sm max-w-xl mx-auto">
             ระบุเลขที่ Sales Order (SO.), หมายเลขพัสดุ (EMS / Flash / KEX) หรือชื่อร้านตัวแทนจำหน่าย เพื่อตรวจสอบสถานะได้ทันที
           </p>
         </div>
 
-        <!-- Search Box Tab 1 -->
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8">
+        <!-- กล่องสถานะกำลังดึงข้อมูลสีส้มอ่อน สำหรับหน้าติดตามสถานะอะไหล่ -->
+        <div id="partsLoadingState" class="bg-amber-50/90 border border-amber-200 rounded-3xl p-8 text-center space-y-3 shadow-xs">
+          <div class="w-12 h-12 mx-auto rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-600 text-xl shadow-inner">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+          </div>
+          <div>
+            <div class="text-base font-bold text-amber-950">กำลังดึงข้อมูล... กรุณารอสักครู่ <span class="text-xs md:text-sm font-normal text-amber-800">(ประมาณ 1-2 นาที)</span></div>
+            <p class="text-xs text-amber-700 mt-0.5">ระบบกำลังเชื่อมต่อฐานข้อมูลจัดส่งอะไหล่ Carrier</p>
+          </div>
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 border border-amber-300 text-xs font-mono font-bold text-amber-800 shadow-2xs">
+            <i class="fa-regular fa-clock text-amber-600 text-xs"></i>
+            <span id="loadingTimerDisplay">รอแล้ว: 0 วินาที</span>
+          </div>
+        </div>
+
+        <!-- Search Box Tab 1 (ซ่อนไว้ก่อนจนกว่าข้อมูลจะพร้อม) -->
+        <div id="partsSearchBoxContainer" class="hidden bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 space-y-4">
           <div class="flex flex-col md:flex-row gap-3">
             <div class="relative flex-1">
-              <i class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+              <i class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 text-base"></i>
               <input type="text" id="searchInput" oninput="detectCarrierTracking()" onkeyup="if(event.key==='Enter') executeSearch()"
                      placeholder="พิมพ์เลข SO., เลขพัสดุ (EMS / Flash / KEX / J&T / Nim Express) หรือชื่อร้าน..." 
                      class="w-full locked-input-h pl-14 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white text-sm md:text-base transition">
@@ -206,8 +221,8 @@
           </div>
 
           <!-- แถบปุ่มลัด 5 ขนส่งหลัก -->
-          <div class="mt-4 pt-4 border-t border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <div class="text-xs md:text-sm font-semibold text-slate-600 flex items-center gap-1.5 shrink-0">
+          <div class="pt-3 border-t border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="text-xs font-semibold text-slate-600 flex items-center gap-1.5 shrink-0">
               <i class="fa-solid fa-arrow-up-right-from-square text-slate-400"></i>
               <span>ตรวจบนเว็บขนส่งโดยตรง:</span>
             </div>
@@ -231,7 +246,7 @@
           </div>
 
           <!-- แถบตรวจจับเลขพัสดุอัตโนมัติ -->
-          <div id="carrierDetectBanner" class="hidden mt-3 p-3.5 rounded-2xl flex items-center justify-between text-xs transition-all">
+          <div id="carrierDetectBanner" class="hidden p-3.5 rounded-2xl flex items-center justify-between text-xs transition-all">
             <div class="flex items-center space-x-2">
               <i id="detectIcon" class="fa-solid fa-circle-info text-sm"></i>
               <span>ตรวจพบเลขพัสดุ <strong id="detectedCarrierName"></strong>: <span id="detectedNumber" class="font-mono font-bold text-sm"></span></span>
@@ -242,8 +257,8 @@
             </button>
           </div>
 
-          <!-- ข้อมูลทดสอบจริง -->
-          <div class="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <!-- ข้อมูลตัวอย่างค้นหา -->
+          <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500 pt-1">
             <span class="font-semibold text-slate-500"><i class="fa-solid fa-bolt text-amber-500 mr-1"></i>ตัวอย่างค้นหา:</span>
             <button onclick="quickSelect('SO-BCT-260000071')" class="px-3 py-1.5 bg-blue-50 text-blue-900 hover:bg-blue-100 rounded-xl border border-blue-200 font-mono font-medium transition">SO-BCT-260000071</button>
             <button onclick="quickSelect('ED794967911TH')" class="px-3 py-1.5 bg-red-50 text-red-900 hover:bg-red-100 rounded-xl border border-red-200 font-mono font-medium transition">ED794967911TH (EMS)</button>
@@ -398,7 +413,7 @@
       </div>
 
       <!-- ================= TAB 2: ตรวจสอบ รุ่น และ หมายเลขเครื่องปรับอากาศ ================= -->
-      <div id="tabContentUnit" class="space-y-8">
+      <div id="tabContentUnit" class="space-y-7">
 
         <!-- Hero Section Tab 2 -->
         <div class="text-center">
@@ -406,19 +421,34 @@
             <i class="fa-solid fa-snowflake text-indigo-700 text-[10px]"></i>
             <span>ระบบสืบค้นข้อมูลเครื่องปรับอากาศ (Unit & Serial Tracker)</span>
           </div>
-          <h1 class="text-lg md:text-xl font-bold text-slate-900 tracking-tight mb-1.5">ตรวจสอบ รุ่น / หมายเลขเครื่องปรับอากาศ และ ข้อมูลอื่นๆ</h1>
+          <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight mb-1.5">ตรวจสอบ รุ่น / หมายเลขเครื่องปรับอากาศ และ ข้อมูลอื่นๆ</h1>
           <p class="text-slate-500 text-xs md:text-sm max-w-xl mx-auto">
             ตรวจสอบข้อมูลเครื่องปรับอากาศ ข้อมูลเอกสาร และคลังสินค้า
           </p>
         </div>
 
-        <!-- Search Box แยก 4 บรรทัด -->
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8">
-          <div class="flex flex-col gap-4 mb-4">
+        <!-- กล่องสถานะกำลังดึงข้อมูลสีส้มอ่อน สำหรับหน้าตรวจสอบเครื่องปรับอากาศ -->
+        <div id="unitLoadingState" class="bg-amber-50/90 border border-amber-200 rounded-3xl p-8 text-center space-y-3 shadow-xs">
+          <div class="w-12 h-12 mx-auto rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-600 text-xl shadow-inner">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+          </div>
+          <div>
+            <div class="text-base font-bold text-amber-950">กำลังดึงข้อมูล... กรุณารอสักครู่ <span class="text-xs md:text-sm font-normal text-amber-800">(ประมาณ 1-2 นาที)</span></div>
+            <p class="text-xs text-amber-700 mt-0.5">ระบบกำลังเชื่อมต่อฐานข้อมูลเครื่องปรับอากาศ Carrier</p>
+          </div>
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 border border-amber-300 text-xs font-mono font-bold text-amber-800 shadow-2xs">
+            <i class="fa-regular fa-clock text-amber-600 text-xs"></i>
+            <span id="loadingTimerDisplayUnit">รอแล้ว: 0 วินาที</span>
+          </div>
+        </div>
+
+        <!-- Search Box แยก 4 บรรทัด (ซ่อนไว้ก่อนจนกว่า onDataReady() จะทำงาน) -->
+        <div id="unitSearchFormBox" class="hidden bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 space-y-4">
+          <div class="grid grid-cols-1 gap-4">
             <div>
               <label class="block text-xs md:text-sm font-bold text-slate-800 mb-1.5 flex items-center gap-1.5">
                 <i class="fa-solid fa-tag text-blue-700"></i>
-                <span>รุ่นเครื่องปรับอากาศ (Model No.) หรือ Item Code <span class="text-rose-500">*</span></span>
+                <span>รุ่นเครื่องปรับอากาศ (Model No.) หรือ Item Code</span>
               </label>
               <div class="relative">
                 <i class="fa-solid fa-snowflake absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
@@ -431,7 +461,7 @@
             <div>
               <label class="block text-xs md:text-sm font-bold text-slate-800 mb-1.5 flex items-center gap-1.5">
                 <i class="fa-solid fa-barcode text-indigo-700"></i>
-                <span>หมายเลขเครื่อง (Serial No. / S/N) <span class="text-rose-500">*</span></span>
+                <span>หมายเลขเครื่อง (Serial No. / S/N)</span>
               </label>
               <div class="relative">
                 <i class="fa-solid fa-fingerprint absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
@@ -444,7 +474,7 @@
             <div>
               <label class="block text-xs md:text-sm font-bold text-slate-800 mb-1.5 flex items-center gap-1.5">
                 <i class="fa-solid fa-file-invoice text-emerald-700"></i>
-                <span>Order SO-BCT <span class="text-rose-500">*</span></span>
+                <span>Order SO-BCT</span>
               </label>
               <div class="relative">
                 <i class="fa-solid fa-hashtag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
@@ -457,7 +487,7 @@
             <div>
               <label class="block text-xs md:text-sm font-bold text-slate-800 mb-1.5 flex items-center gap-1.5">
                 <i class="fa-solid fa-receipt text-amber-700"></i>
-                <span>REF. PO <span class="text-rose-500">*</span></span>
+                <span>REF. PO</span>
               </label>
               <div class="relative">
                 <i class="fa-solid fa-file-lines absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
@@ -466,12 +496,6 @@
                        class="w-full locked-input-h pl-11 pr-4 bg-slate-50 border border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:bg-white text-sm transition font-mono">
               </div>
             </div>
-          </div>
-
-          <!-- แจ้งเตือนเมื่อกรอกข้อมูลไม่ครบ -->
-          <div id="unitIncompleteAlert" class="hidden mb-4 p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl text-xs flex items-center space-x-2 animate-shake">
-            <i class="fa-solid fa-circle-exclamation text-amber-600 text-sm shrink-0"></i>
-            <span>กรุณากรอกข้อมูลให้ครบทั้ง 4 ช่อง (รุ่นแอร์, S/N, Order SO-BCT และ REF. PO) ก่อนทำการค้นหา</span>
           </div>
 
           <div class="flex flex-col sm:flex-row gap-3 pt-2">
@@ -485,12 +509,6 @@
               <i class="fa-solid fa-rotate-left text-xs"></i>
               <span>ล้างช่องค้นหา</span>
             </button>
-          </div>
-
-          <div class="mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-            <span class="font-bold text-slate-600"><i class="fa-solid fa-sparkles text-amber-500 mr-1"></i>คลิกทดสอบด่วน (ครบ 4 ช่อง):</span>
-            <button onclick="quickSelectUnit('42TVAB010', 'SN-BCT2601001', 'SO-BCT-260000071', 'PO-MHC-2601')" class="px-3 py-1 bg-blue-50 text-blue-900 hover:bg-blue-100 rounded-xl border border-blue-200 font-mono font-medium transition">ชุดทดสอบ 1 (มหานคร แอร์คอน)</button>
-            <button onclick="quickSelectUnit('42TVAB013', 'SN-BCT2601002', 'SO-BCT-260000140', 'PO-APS-2602')" class="px-3 py-1 bg-indigo-50 text-indigo-900 hover:bg-indigo-100 rounded-xl border border-indigo-200 font-mono font-medium transition">ชุดทดสอบ 2 (เอพีเอส เซอร์วิส)</button>
           </div>
         </div>
 
@@ -640,9 +658,12 @@
   </div>
 
   <script>
-    // สิทธิ์การเข้าใช้งานระบบ
+    // ==========================================
+    // กำหนดชื่อผู้ใช้งาน (Username) และ รหัสผ่าน (Password)
+    // สำหรับเข้าใช้งานระบบบน GitHub Pages
+    // ==========================================
     const VALID_ACCOUNTS = [
-      { user: 'carrier', pass: '123456789' }
+      { user: 'carrier', pass: '123456789' } // เปลี่ยน user และ pass ตรงนี้ได้ตามต้องการ
     ];
 
     function handleLogin(e) {
@@ -719,8 +740,63 @@
     ];
 
     let allRecords = [...fallbackData];
+    let loadingTimerInterval = null;
+    let loadingSeconds = 0;
+    let isDataLoaded = false;
+    let currentActiveTab = 'parts';
+
+    // ฟังก์ชันเริ่มนับเวลาสดแบบเรียลไทม์
+    function startLoadingTimer() {
+      if (loadingTimerInterval) clearInterval(loadingTimerInterval);
+      loadingSeconds = 0;
+      updateLoadingDisplays();
+
+      loadingTimerInterval = setInterval(() => {
+        loadingSeconds++;
+        updateLoadingDisplays();
+      }, 1000);
+    }
+
+    function updateLoadingDisplays() {
+      const text = `รอแล้ว: ${loadingSeconds} วินาที`;
+      const displayEl1 = document.getElementById('loadingTimerDisplay');
+      const displayEl2 = document.getElementById('loadingTimerDisplayUnit');
+      if (displayEl1) displayEl1.innerText = text;
+      if (displayEl2) displayEl2.innerText = text;
+    }
+
+    // ฟังก์ชันเมื่อข้อมูลพร้อมใช้งาน: ซ่อนกล่องสีส้มทันที และเปิดกล่องค้นหาขึ้นมา
+    function onDataReady() {
+      isDataLoaded = true;
+      if (loadingTimerInterval) {
+        clearInterval(loadingTimerInterval);
+        loadingTimerInterval = null;
+      }
+
+      // ซ่อนกล่องสถานะสีส้มของทั้ง 2 แท็บ
+      const partsLoading = document.getElementById('partsLoadingState');
+      const partsSearchBox = document.getElementById('partsSearchBoxContainer');
+      const unitLoading = document.getElementById('unitLoadingState');
+      const unitSearchBox = document.getElementById('unitSearchFormBox');
+
+      if (partsLoading) partsLoading.classList.add('hidden');
+      if (partsSearchBox) partsSearchBox.classList.remove('hidden');
+
+      if (unitLoading) unitLoading.classList.add('hidden');
+      if (unitSearchBox) unitSearchBox.classList.remove('hidden');
+
+      // โฟกัสไปที่ช่องค้นหาให้อัตโนมัติทันที
+      setTimeout(() => {
+        if (currentActiveTab === 'parts') {
+          document.getElementById('searchInput')?.focus();
+        } else {
+          document.getElementById('unitModelInput')?.focus();
+        }
+      }, 150);
+    }
 
     function switchMainTab(tab) {
+      currentActiveTab = tab;
       const btnParts = document.getElementById('tabBtnParts');
       const btnUnit = document.getElementById('tabBtnUnit');
       const contentParts = document.getElementById('tabContentParts');
@@ -731,13 +807,18 @@
         btnUnit.className = "flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-medium transition-all flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900";
         contentParts.classList.remove('hidden');
         contentUnit.classList.add('hidden');
-        setTimeout(() => document.getElementById('searchInput')?.focus(), 150);
+        if (isDataLoaded) {
+          setTimeout(() => document.getElementById('searchInput')?.focus(), 150);
+        }
       } else {
         btnUnit.className = "flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-bold transition-all flex items-center justify-center gap-2 bg-white text-indigo-900 shadow-sm";
         btnParts.className = "flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-medium transition-all flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900";
         contentUnit.classList.remove('hidden');
         contentParts.classList.add('hidden');
-        setTimeout(() => document.getElementById('unitModelInput')?.focus(), 150);
+
+        if (isDataLoaded) {
+          setTimeout(() => document.getElementById('unitModelInput')?.focus(), 150);
+        }
       }
     }
 
@@ -749,24 +830,10 @@
       const guidance = document.getElementById('unitInitialGuidance');
       const resultsSection = document.getElementById('unitResultsSection');
       const notFoundBox = document.getElementById('unitNotFoundBox');
-      const incompleteAlert = document.getElementById('unitIncompleteAlert');
 
-      // ตรวจสอบว่ากรอกข้อมูลครบทั้ง 4 ช่องหรือไม่
-      if (!modelQ || !serialQ || !soQ || !poQ) {
-        if (incompleteAlert) {
-          incompleteAlert.classList.remove('hidden');
-          incompleteAlert.classList.remove('animate-shake');
-          void incompleteAlert.offsetWidth;
-          incompleteAlert.classList.add('animate-shake');
-        }
-        guidance?.classList.remove('hidden');
-        resultsSection?.classList.add('hidden');
-        notFoundBox?.classList.add('hidden');
+      if (!modelQ && !serialQ && !soQ && !poQ) {
+        resetUnitSearch();
         return;
-      }
-
-      if (incompleteAlert) {
-        incompleteAlert.classList.add('hidden');
       }
 
       const matches = allRecords.filter(item => {
@@ -776,10 +843,10 @@
         const itemSo = (item.so || '').toLowerCase();
         const itemPo = (item.po || '').toLowerCase();
 
-        const matchModel = itemCode.includes(modelQ) || itemDesc.includes(modelQ);
-        const matchSerial = itemSerial.includes(serialQ);
-        const matchSo = itemSo.includes(soQ);
-        const matchPo = itemPo.includes(poQ);
+        const matchModel = !modelQ || itemCode.includes(modelQ) || itemDesc.includes(modelQ);
+        const matchSerial = !serialQ || itemSerial.includes(serialQ);
+        const matchSo = !soQ || itemSo.includes(soQ);
+        const matchPo = !poQ || itemPo.includes(poQ);
 
         return matchModel && matchSerial && matchSo && matchPo;
       });
@@ -918,7 +985,6 @@
       document.getElementById('unitSerialInput').value = '';
       document.getElementById('unitSoInput').value = '';
       document.getElementById('unitPoInput').value = '';
-      document.getElementById('unitIncompleteAlert')?.classList.add('hidden');
       document.getElementById('unitInitialGuidance').classList.remove('hidden');
       document.getElementById('unitResultsSection').classList.add('hidden');
       document.getElementById('unitNotFoundBox').classList.add('hidden');
@@ -937,8 +1003,9 @@
     function showMainApp() {
       document.getElementById('loginScreen').classList.add('hidden');
       document.getElementById('mainApp').classList.remove('hidden');
+      switchMainTab('parts');
+      startLoadingTimer();
       loadDataFromSheet();
-      setTimeout(() => document.getElementById('unitModelInput')?.focus(), 300);
     }
 
     async function loadDataFromSheet() {
@@ -949,6 +1016,7 @@
             const result = await res.json();
             if (result.success && Array.isArray(result.data) && result.data.length > 0) {
               allRecords = result.data;
+              onDataReady();
               return;
             }
           }
@@ -966,16 +1034,24 @@
               }
               delete window[callbackName];
               script.remove();
+              onDataReady();
               resolve();
             };
             script.src = `${APPS_SCRIPT_WEBAPP_URL}?callback=${callbackName}`;
-            script.onerror = () => { delete window[callbackName]; script.remove(); resolve(); };
+            script.onerror = () => { 
+              delete window[callbackName]; 
+              script.remove(); 
+              onDataReady();
+              resolve(); 
+            };
             document.head.appendChild(script);
           });
+          return;
         } catch (errJsonp) {
           console.warn("JSONP error:", errJsonp);
         }
       }
+      onDataReady();
     }
 
     function openExternalTracking(carrierType, customNum = null) {
