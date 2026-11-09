@@ -658,45 +658,33 @@
   </div>
 
   <script>
-    // Login is verified by Apps Script. Never place credentials in this file.
-    const SESSION_KEY = 'carrier_session_token';
-    let sessionToken = sessionStorage.getItem(SESSION_KEY) || '';
+    // ==========================================
+    // กำหนดชื่อผู้ใช้งาน (Username) และ รหัสผ่าน (Password)
+    // สำหรับเข้าใช้งานระบบบน GitHub Pages
+    // ==========================================
+    const VALID_ACCOUNTS = [
+      { user: 'carrier', pass: '123456' } // เปลี่ยน user และ pass ตรงนี้ได้ตามต้องการ
+    ];
 
-    function gasCall(methodName, ...args) {
-      return new Promise((resolve, reject) => {
-        if (typeof google === 'undefined' || !google.script || !google.script.run) {
-          reject(new Error('กรุณาเปิดเว็บไซต์ผ่าน Google Apps Script'));
-          return;
-        }
-        const runner = google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);
-        runner[methodName](...args);
-      });
-    }
-
-    async function handleLogin(e) {
+    function handleLogin(e) {
       if (e) e.preventDefault();
-      const u = (document.getElementById('usernameInput')?.value || '').trim();
-      const p = document.getElementById('passwordInput')?.value || '';
+      const u = (document.getElementById('usernameInput')?.value || '').trim().toLowerCase();
+      const p = (document.getElementById('passwordInput')?.value || '').trim();
       const errBox = document.getElementById('loginError');
-      const submitButton = document.querySelector('#loginScreen button[type="submit"]');
-      if (submitButton) submitButton.disabled = true;
-      try {
-        const result = await gasCall('login', u, p);
-        if (!result || !result.success || !result.token) throw new Error('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
-        sessionToken = result.token;
-        sessionStorage.setItem(SESSION_KEY, sessionToken);
-        document.getElementById('passwordInput').value = '';
+
+      const match = VALID_ACCOUNTS.find(acc => acc.user.toLowerCase() === u && acc.pass === p);
+
+      if (match) {
+        sessionStorage.setItem('carrier_auth', 'true');
         if (errBox) errBox.classList.add('hidden');
         showMainApp();
-      } catch (error) {
+      } else {
         if (errBox) {
           errBox.classList.remove('hidden');
           errBox.classList.remove('animate-shake');
           void errBox.offsetWidth;
           errBox.classList.add('animate-shake');
         }
-      } finally {
-        if (submitButton) submitButton.disabled = false;
       }
     }
 
@@ -716,13 +704,13 @@
       displaySystemDate();
       setInterval(displaySystemDate, 60000);
 
-      if (sessionToken) {
-        gasCall('validateSession', sessionToken).then(result => {
-          if (result && result.valid) showMainApp();
-          else showLoginScreen();
-        }).catch(showLoginScreen);
+      const isAuth = sessionStorage.getItem('carrier_auth');
+      if (isAuth === 'true') {
+        showMainApp();
       } else {
-        showLoginScreen();
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('mainApp').classList.add('hidden');
+        setTimeout(() => document.getElementById('usernameInput')?.focus(), 200);
       }
     });
 
@@ -740,9 +728,17 @@
       dateEl.innerText = `Today ${dayName} ${day}/${month}/${year} (${day} ${thMonths[month]} ${thYearShort})`;
     }
 
-    // Data is retrieved only through authenticated google.script.run calls.
-    let allRecords = [];       // Tracking / shipment data (GAS source 1)
-    let unitRecords = [];      // Model / Serial Number data (GAS source 2)
+    const APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbw3Qzo5Ho36IT6ovXulq5A-T70AEGsLgED9LV1NCDNWyBhgR2mpeo0rbcR-hReLoTKB/exec';
+
+    const fallbackData = [
+      { date: "8-Jan-26", so: "SO-BCT-260000071", invoice: "INV-2600101", customer: "บริษัทมหานคร แอร์คอน", po: "PO-MHC-2601", itemCode: "42TVAB010", itemDesc: "Carrier X-Inverter Plus (9,000 BTU)", location: "SCG-JWD-BKD", serial: "SN-BCT2601001", carrier: "EMS", tracking: "ED794967911TH", province: "กทม", shipTo: "บริษัทมหานคร แอร์คอน" },
+      { date: "8-Jan-26", so: "SO-BCT-260000140", invoice: "INV-2600102", customer: "บริษัทเอพีเอส เซอร์วิส", po: "PO-APS-2602", itemCode: "42TVAB013", itemDesc: "Carrier X-Inverter Plus (12,000 BTU)", location: "SCG-JWD-BKD", serial: "SN-BCT2601002", carrier: "EMS", tracking: "ED794967664TH", province: "กทม", shipTo: "บริษัทเอพีเอส เซอร์วิส" },
+      { date: "8-Jan-26", so: "SO-BCT-260000144", invoice: "INV-2600103", customer: "บริษัทเอพีเอส เซอร์วิส", po: "PO-APS-2603", itemCode: "42TSAA010", itemDesc: "Carrier Copper 11 (9,000 BTU)", location: "SCG-JWD-BKD", serial: "SN-BCT2601003", carrier: "EMS", tracking: "ED794967678TH", province: "กทม", shipTo: "บริษัทเอพีเอส เซอร์วิส" },
+      { date: "10-Jan-26", so: "SO-BCT-260000615", invoice: "INV-2600108", customer: "หจก.โมเดิร์น แอร์กรุ๊ป", po: "PO-MA-2613", itemCode: "42TVAB013", itemDesc: "Carrier X-Inverter Plus (12,000 BTU)", location: "WH-RAYONG", serial: "SN-BCT2601013", carrier: "Flash Express", tracking: "TH0123456789A", province: "ระยอง", shipTo: "หจก.โมเดิร์น แอร์กรุ๊ป" }
+    ];
+
+    let allRecords = [...fallbackData];
+    let unitRecords = [...fallbackData];
     let currentUnitMatches = [];
     let currentTrackingMatches = [];
     let loadingTimerInterval = null;
@@ -847,7 +843,8 @@
         return;
       }
 
-      const matches = unitRecords.filter(item => {
+      const sourceList = unitRecords.length > 0 ? unitRecords : allRecords;
+      const matches = sourceList.filter(item => {
         const itemCode = (item.itemCode || item.model || '').toLowerCase();
         const itemDesc = (item.itemDesc || '').toLowerCase();
         const itemSerial = (item.serial || '').toLowerCase();
@@ -931,14 +928,6 @@
       }
     }
 
-    function quickSelectUnit(model, serial, so, po) {
-      document.getElementById('unitModelInput').value = model || '';
-      document.getElementById('unitSerialInput').value = serial || '';
-      document.getElementById('unitSoInput').value = so || '';
-      document.getElementById('unitPoInput').value = po || '';
-      executeUnitSearch();
-    }
-
     function formatThaiShortDate(dateStr) {
       if (!dateStr || dateStr === '-') return '';
       const thMonths = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
@@ -1003,26 +992,13 @@
       document.getElementById('unitModelInput').focus();
     }
 
-    function showLoginScreen() {
-      sessionToken = '';
-      sessionStorage.removeItem(SESSION_KEY);
-      allRecords = [];
-      unitRecords = [];
-      currentUnitMatches = [];
-      currentTrackingMatches = [];
-      isDataLoaded = false;
+    function handleLogout() {
+      sessionStorage.removeItem('carrier_auth');
       document.getElementById('mainApp').classList.add('hidden');
       document.getElementById('loginScreen').classList.remove('hidden');
       document.getElementById('usernameInput').value = '';
       document.getElementById('passwordInput').value = '';
       document.getElementById('loginError').classList.add('hidden');
-      setTimeout(() => document.getElementById('usernameInput')?.focus(), 200);
-    }
-
-    function handleLogout() {
-      const token = sessionToken;
-      showLoginScreen();
-      if (token) gasCall('logout', token).catch(() => {});
     }
 
     function showMainApp() {
@@ -1034,26 +1010,51 @@
     }
 
     async function loadDataFromSheet() {
-      try {
-        const [trackingResult, unitResult] = await Promise.all([
-          gasCall('getTrackingData', sessionToken),
-          gasCall('getUnitData', sessionToken)
-        ]);
-        if (!trackingResult?.success || !Array.isArray(trackingResult.data)) {
-          throw new Error(trackingResult?.error || 'โหลดข้อมูล Tracking ไม่สำเร็จ');
+      if (APPS_SCRIPT_WEBAPP_URL) {
+        try {
+          const res = await fetch(APPS_SCRIPT_WEBAPP_URL);
+          if (res.ok) {
+            const result = await res.json();
+            if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+              allRecords = result.data;
+              unitRecords = result.data;
+              onDataReady();
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn("Direct fetch error:", e);
         }
-        if (!unitResult?.success || !Array.isArray(unitResult.data)) {
-          throw new Error(unitResult?.error || 'โหลดข้อมูล Model / Serial ไม่สำเร็จ');
+
+        try {
+          await new Promise((resolve) => {
+            const script = document.createElement('script');
+            const callbackName = 'carrier_cb_' + Date.now();
+            window[callbackName] = function(res) {
+              if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+                allRecords = res.data;
+                unitRecords = res.data;
+              }
+              delete window[callbackName];
+              script.remove();
+              onDataReady();
+              resolve();
+            };
+            script.src = `${APPS_SCRIPT_WEBAPP_URL}?callback=${callbackName}`;
+            script.onerror = () => { 
+              delete window[callbackName]; 
+              script.remove(); 
+              onDataReady();
+              resolve(); 
+            };
+            document.head.appendChild(script);
+          });
+          return;
+        } catch (errJsonp) {
+          console.warn("JSONP error:", errJsonp);
         }
-        allRecords = trackingResult.data;
-        unitRecords = unitResult.data;
-        onDataReady();
-      } catch (error) {
-        console.error('Authenticated data loading failed:', error);
-        if (loadingTimerInterval) clearInterval(loadingTimerInterval);
-        alert('ไม่สามารถโหลดข้อมูลได้ หรือ Session หมดอายุ กรุณาเข้าสู่ระบบใหม่');
-        showLoginScreen();
       }
+      onDataReady();
     }
 
     function openExternalTracking(carrierType, customNum = null) {
