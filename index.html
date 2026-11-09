@@ -35,6 +35,7 @@
     .animate-shake {
       animation: shake 0.4s ease-in-out;
     }
+    /* ล็อกสัดส่วนและระยะห่างมาตรฐานเพื่อความเป๊ะทุกหน้าจอ */
     .locked-badge {
       min-width: 260px;
       max-width: 330px;
@@ -104,7 +105,7 @@
           </div>
         </div>
 
-        <button type="submit" id="loginBtn" class="w-full mt-2 bg-carrier hover:opacity-95 text-white font-semibold py-3.5 rounded-xl transition text-sm shadow-md flex items-center justify-center space-x-2 active:scale-95">
+        <button type="submit" class="w-full mt-2 bg-carrier hover:opacity-95 text-white font-semibold py-3.5 rounded-xl transition text-sm shadow-md flex items-center justify-center space-x-2 active:scale-95">
           <span>เข้าสู่ระบบ</span>
           <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
         </button>
@@ -149,6 +150,7 @@
             <span id="currentDateText" class="font-normal tracking-normal text-slate-700 truncate">Today</span>
           </span>
 
+          <!-- ปุ่มออกจากระบบ -->
           <button onclick="handleLogout()" class="px-3.5 py-1.5 h-[34px] bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 shadow-2xs shrink-0">
             <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
             <span>ออกจากระบบ</span>
@@ -657,55 +659,31 @@
   </div>
 
   <script>
-    // =========================================================================
-    // ระบบความปลอดภัยแบบ Server-Side Authentication
-    // ไม่มีการเก็บรหัสผ่านจริงไว้ในไฟล์นี้ ป้องกันคนกด F12 / Inspect ดูรหัส 100%
-    // =========================================================================
-    const APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbw3Qzo5Ho36IT6ovXulq5A-T70AEGsLgED9LV1NCDNWyBhgR2mpeo0rbcR-hReLoTKB/exec';
+    // ==========================================
+    // กำหนดชื่อผู้ใช้งาน (Username) และ รหัสผ่าน (Password)
+    // ==========================================
+    const VALID_ACCOUNTS = [
+      { user: 'carrier', pass: 'bgcarrier' } // สามารถเปลี่ยน user และ pass ได้ตรงนี้
+    ];
 
-    async function handleLogin(e) {
+    function handleLogin(e) {
       if (e) e.preventDefault();
-      const u = (document.getElementById('usernameInput')?.value || '').trim();
+      const u = (document.getElementById('usernameInput')?.value || '').trim().toLowerCase();
       const p = (document.getElementById('passwordInput')?.value || '').trim();
       const errBox = document.getElementById('loginError');
-      const submitBtn = document.querySelector('#loginScreen button[type="submit"]');
 
-      if (!u || !p) return;
+      const match = VALID_ACCOUNTS.find(acc => acc.user.toLowerCase() === u && acc.pass === p);
 
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i><span>กำลังตรวจสอบ...</span>';
-      }
-
-      try {
-        // ส่ง username และ password ไปตรวจสอบที่ Google Apps Script หลังบ้าน
-        const response = await fetch(APPS_SCRIPT_WEBAPP_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: 'login', username: u, password: p })
-        });
-
-        const result = await response.json();
-
-        if (result && result.success) {
-          sessionStorage.setItem('carrier_auth_token', result.token || 'valid_session');
-          if (errBox) errBox.classList.add('hidden');
-          document.getElementById('passwordInput').value = '';
-          showMainApp();
-        } else {
-          throw new Error(result.error || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
-        }
-      } catch (err) {
+      if (match) {
+        sessionStorage.setItem('carrier_auth', 'true');
+        if (errBox) errBox.classList.add('hidden');
+        showMainApp();
+      } else {
         if (errBox) {
           errBox.classList.remove('hidden');
           errBox.classList.remove('animate-shake');
           void errBox.offsetWidth;
           errBox.classList.add('animate-shake');
-        }
-      } finally {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>เข้าสู่ระบบ</span><i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>';
         }
       }
     }
@@ -722,12 +700,22 @@
       }
     }
 
+    function handleLogout() {
+      sessionStorage.removeItem('carrier_auth');
+      document.getElementById('mainApp').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+      document.getElementById('usernameInput').value = '';
+      document.getElementById('passwordInput').value = '';
+      document.getElementById('loginError').classList.add('hidden');
+      setTimeout(() => document.getElementById('usernameInput')?.focus(), 200);
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       displaySystemDate();
       setInterval(displaySystemDate, 60000);
 
-      const authToken = sessionStorage.getItem('carrier_auth_token');
-      if (authToken) {
+      const isAuth = sessionStorage.getItem('carrier_auth');
+      if (isAuth === 'true') {
         showMainApp();
       } else {
         document.getElementById('loginScreen').classList.remove('hidden');
@@ -950,6 +938,14 @@
       }
     }
 
+    function quickSelectUnit(model, serial, so, po) {
+      document.getElementById('unitModelInput').value = model || '';
+      document.getElementById('unitSerialInput').value = serial || '';
+      document.getElementById('unitSoInput').value = so || '';
+      document.getElementById('unitPoInput').value = po || '';
+      executeUnitSearch();
+    }
+
     function formatThaiShortDate(dateStr) {
       if (!dateStr || dateStr === '-') return '';
       const thMonths = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
@@ -1012,15 +1008,6 @@
       document.getElementById('unitResultsSection').classList.add('hidden');
       document.getElementById('unitNotFoundBox').classList.add('hidden');
       document.getElementById('unitModelInput').focus();
-    }
-
-    function handleLogout() {
-      sessionStorage.removeItem('carrier_auth_token');
-      document.getElementById('mainApp').classList.add('hidden');
-      document.getElementById('loginScreen').classList.remove('hidden');
-      document.getElementById('usernameInput').value = '';
-      document.getElementById('passwordInput').value = '';
-      document.getElementById('loginError').classList.add('hidden');
     }
 
     function showMainApp() {
@@ -1242,14 +1229,6 @@
 
     function renderCardByTrackingIndex(idx) {
       const item = currentTrackingMatches[idx];
-      if (item) {
-        renderCard(item);
-        window.scrollTo({ top: 320, behavior: 'smooth' });
-      }
-    }
-
-    function renderCardByTracking(tracking) {
-      const item = allRecords.find(r => r.tracking === tracking);
       if (item) {
         renderCard(item);
         window.scrollTo({ top: 320, behavior: 'smooth' });
