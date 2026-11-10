@@ -739,7 +739,7 @@
       dateEl.innerText = `Today ${dayName} ${day}/${month}/${year} (${day} ${thMonths[month]} ${thYearShort})`;
     }
 
-    const APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbw3Qzo5Ho36IT6ovXulq5A-T70AEGsLgED9LV1NCDNWyBhgR2mpeo0rbcR-hReLoTKB/exec';
+    const APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxe6F3yF1ypRlf1JvMq4gliB8VlVAlqq6VJdo6MAl-pU28_4HXMHoSFeOvWrZ8rTDAd_w/exec';
 
     let currentUnitMatches = [];
     let currentTrackingMatches = [];
@@ -873,7 +873,7 @@
       })[ch]);
     }
 
-    // ฟังก์ชันค้นหาข้อมูลเครื่องปรับอากาศ (แท็บ 2) ค้นสดไปยัง Google Sheets
+    // ฟังก์ชันค้นหาข้อมูลเครื่องปรับอากาศ (แท็บ 2) ค้นสดไปยังชีต Unit (1689sbvkpnpt71qNk1nXhLctpiCYWP1e6ZJJXtR8iF2g)
     async function executeUnitSearch() {
       const modelQ  = (document.getElementById('unitModelInput')?.value || '').trim();
       const serialQ = (document.getElementById('unitSerialInput')?.value || '').trim();
@@ -1055,7 +1055,6 @@
       document.getElementById('mainApp').classList.remove('hidden');
       switchMainTab('parts');
       startLoadingTimer();
-      // เมื่อเข้าสู่ระบบ ให้รอจำลองสถานะเชื่อมต่อ 1.2 วินาที แล้วเปิดช่องค้นหาทันที
       setTimeout(onDataReady, 1200);
     }
 
@@ -1107,7 +1106,7 @@
       }
     }
 
-    // ฟังก์ชันค้นหาพัสดุ (แท็บ 1) ดึงข้อมูลสดจาก Google Sheets
+    // ฟังก์ชันค้นหาพัสดุ (แท็บ 1) ดึงข้อมูลสดจากชีต Parts (1gqy5OnPiPwOVKrQgRDBSSQ8EkdCmqfCQmdH_m-ssQOY)
     async function executeSearch() {
       const q = document.getElementById('searchInput').value.trim();
       const guidance = document.getElementById('initialGuidance');
